@@ -25,19 +25,19 @@ export const MediaShowcase = () => {
           <span className="font-display text-xs text-silver tracking-widest">VITRINE DE MÍDIA</span>
         </div>
 
-        <h3 className="absolute bottom-16 left-4 right-4 font-display text-xl text-silver text-glow">{slides[idx].title}</h3>
+        <h3 className="absolute bottom-14 sm:bottom-16 left-3 right-3 sm:left-4 sm:right-4 font-display text-base sm:text-xl text-silver text-glow">{slides[idx].title}</h3>
 
         {/* Controles */}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-3 flex items-center gap-3">
-          <button onClick={() => setPlaying(p => !p)} className="text-primary hover:scale-110 transition-transform">
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-2 sm:p-3 flex items-center gap-2 sm:gap-3">
+          <button onClick={() => setPlaying(p => !p)} className="text-primary hover:scale-110 transition-transform shrink-0" aria-label={playing ? "Pausar" : "Reproduzir"}>
             {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           </button>
-          <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+          <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden min-w-0">
             <div className="h-full bg-gradient-to-r from-primary to-primary-glow transition-all" style={{ width: `${((idx + 1) / slides.length) * 100}%` }} />
           </div>
-          <span className="mono text-xs text-primary">00:{String(idx * 12).padStart(2, "0")}</span>
-          <Volume2 className="h-4 w-4 text-primary/80" />
-          <Maximize2 className="h-4 w-4 text-primary/80" />
+          <span className="mono text-[10px] sm:text-xs text-primary shrink-0">00:{String(idx * 12).padStart(2, "0")}</span>
+          <Volume2 className="hidden sm:block h-4 w-4 text-primary/80" />
+          <Maximize2 className="hidden sm:block h-4 w-4 text-primary/80" />
         </div>
       </div>
 

@@ -8,12 +8,12 @@ const diretoria = [
 ];
 
 export const SobreCASI = () => (
-  <section className="panel-glow p-6 animate-fade-up">
-    <header className="flex items-center gap-3 mb-5">
-      <div className="rounded-lg bg-primary/15 p-2 border border-primary/30">
+  <section className="panel-glow p-4 sm:p-6 animate-fade-up">
+    <header className="flex items-center gap-3 mb-4 sm:mb-5">
+      <div className="rounded-lg bg-primary/15 p-2 border border-primary/30 shrink-0">
         <Code2 className="h-5 w-5 text-primary" />
       </div>
-      <h2 className="font-display text-lg text-silver tracking-widest">SOBRE O CASI</h2>
+      <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">SOBRE O CASI</h2>
     </header>
 
     <div className="space-y-4 text-sm leading-relaxed border-l-2 border-primary/40 pl-4">
@@ -25,7 +25,7 @@ export const SobreCASI = () => (
       </p>
     </div>
 
-    <div className="grid grid-cols-3 gap-3 mt-6">
+    <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5 sm:mt-6">
       {[
         { icon: Users, label: "ALUNOS", value: "+200" },
         { icon: Zap, label: "EVENTOS/ANO", value: "12" },
@@ -41,7 +41,7 @@ export const SobreCASI = () => (
 
     <div className="mt-6">
       <h3 className="font-display text-xs uppercase tracking-widest text-muted-foreground mb-3">Diretoria Atual</h3>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {diretoria.map(d => (
           <div key={d.cargo} className="flex items-center gap-2 rounded border border-border bg-background/40 p-2">
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-base">{d.emoji}</div>
