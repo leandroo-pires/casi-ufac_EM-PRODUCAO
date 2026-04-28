@@ -35,7 +35,7 @@ const Auth = () => {
     const p = loginSchema.safeParse(login);
     if (!p.success) return toast.error(p.error.errors[0].message);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword(p.data);
+    const { error } = await supabase.auth.signInWithPassword({ email: p.data.email, password: p.data.password });
     setLoading(false);
     error ? toast.error(error.message) : toast.success("Acesso autorizado.");
   };
