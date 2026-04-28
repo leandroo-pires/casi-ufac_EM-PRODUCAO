@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
+import { BackButton } from "@/components/BackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, MapPin, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ const Eventos = () => {
   return (
     <Layout>
       <div className="container py-6 md:py-10">
+        <BackButton to="/" label="Início" />
         <header className="mb-6 md:mb-8">
           <p className="mono text-[10px] sm:text-xs text-primary mb-2">// /eventos</p>
           <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-silver text-glow tracking-widest">EVENTOS</h1>
