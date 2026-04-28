@@ -14,11 +14,11 @@ const Eventos = () => {
 
   return (
     <Layout>
-      <div className="container py-10">
-        <header className="mb-8">
-          <p className="mono text-xs text-primary mb-2">// /eventos</p>
-          <h1 className="font-display text-4xl text-silver text-glow tracking-widest">EVENTOS</h1>
-          <p className="text-muted-foreground mt-2">Hackathons, workshops, palestras e encontros da comunidade.</p>
+      <div className="container py-6 md:py-10">
+        <header className="mb-6 md:mb-8">
+          <p className="mono text-[10px] sm:text-xs text-primary mb-2">// /eventos</p>
+          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-silver text-glow tracking-widest">EVENTOS</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">Hackathons, workshops, palestras e encontros da comunidade.</p>
         </header>
 
         {items.length === 0 ? (
@@ -27,7 +27,7 @@ const Eventos = () => {
             <p className="mono text-sm text-muted-foreground">// nenhum evento cadastrado</p>
           </div>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {items.map(ev => {
               const future = new Date(ev.data_evento) > new Date();
               return (

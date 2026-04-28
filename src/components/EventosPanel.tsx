@@ -18,12 +18,12 @@ export const EventosPanel = () => {
   }, []);
 
   return (
-    <section className="panel-glow p-6 animate-fade-up">
-      <header className="flex items-center gap-3 mb-5">
-        <div className="rounded-lg bg-primary/15 p-2 border border-primary/30">
+    <section className="panel-glow p-4 sm:p-6 animate-fade-up">
+      <header className="flex items-center gap-3 mb-4 sm:mb-5">
+        <div className="rounded-lg bg-primary/15 p-2 border border-primary/30 shrink-0">
           <Calendar className="h-5 w-5 text-primary" />
         </div>
-        <h2 className="font-display text-lg text-silver tracking-widest">REGISTRO DE EVENTOS E NOVIDADES</h2>
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">EVENTOS E NOVIDADES</h2>
       </header>
 
       {eventos.length === 0 ? (
@@ -37,7 +37,7 @@ export const EventosPanel = () => {
             const future = new Date(ev.data_evento) > new Date();
             return (
               <article key={ev.id} className="group rounded-lg border border-border bg-background/40 p-3 flex gap-3 hover:border-primary/50 transition-colors">
-                <div className="h-20 w-20 shrink-0 rounded-md overflow-hidden bg-muted border border-primary/20">
+                <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-md overflow-hidden bg-muted border border-primary/20">
                   {ev.imagem_url ? <img src={ev.imagem_url} alt={ev.titulo} className="h-full w-full object-cover group-hover:scale-110 transition-transform" /> : <div className="h-full w-full flex items-center justify-center"><ImageIcon className="h-6 w-6 text-primary/50" /></div>}
                 </div>
                 <div className="flex-1 min-w-0">

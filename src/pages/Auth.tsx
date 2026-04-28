@@ -56,18 +56,18 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
-      <div className="absolute inset-0 mono text-[10px] text-primary/10 overflow-hidden p-6 leading-tight pointer-events-none select-none">
+      <div className="absolute inset-0 mono text-[9px] sm:text-[10px] text-primary/10 overflow-hidden p-4 sm:p-6 leading-tight pointer-events-none select-none whitespace-nowrap">
         {Array.from({ length: 30 }).map((_, i) => (
           <div key={i}>&gt; {Array.from({ length: 80 }).map(() => Math.random() > 0.5 ? "1" : "0").join("")}</div>
         ))}
       </div>
 
-      <div className="relative w-full max-w-md panel-glow p-8 animate-fade-up">
-        <div className="text-center mb-6">
-          <img src={logo} alt="CASI" className="h-20 w-auto mx-auto mb-3 drop-shadow-[0_0_15px_hsl(var(--primary)/0.6)]" />
-          <div className="mono text-xs text-primary mb-1">&gt; access_terminal --area=aluno</div>
-          <h1 className="font-display text-2xl text-silver tracking-widest flex items-center justify-center gap-2">
-            <Terminal className="h-5 w-5 text-primary animate-pulse" /> ÁREA DO ALUNO
+      <div className="relative w-full max-w-md panel-glow p-6 sm:p-8 animate-fade-up">
+        <div className="text-center mb-5 sm:mb-6">
+          <img src={logo} alt="CASI" className="h-16 sm:h-20 w-auto mx-auto mb-3 drop-shadow-[0_0_15px_hsl(var(--primary)/0.6)]" />
+          <div className="mono text-[10px] sm:text-xs text-primary mb-1">&gt; access_terminal --area=aluno</div>
+          <h1 className="font-display text-lg sm:text-2xl text-silver tracking-widest flex items-center justify-center gap-2">
+            <Terminal className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" /> ÁREA DO ALUNO
           </h1>
         </div>
 

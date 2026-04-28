@@ -49,16 +49,16 @@ export const OuvidoriaPanel = () => {
   };
 
   return (
-    <section className="panel-glow p-6 animate-fade-up">
-      <header className="flex items-center gap-3 mb-5">
-        <div className="rounded-lg bg-primary/15 p-2 border border-primary/30">
+    <section className="panel-glow p-4 sm:p-6 animate-fade-up">
+      <header className="flex items-center gap-3 mb-4 sm:mb-5">
+        <div className="rounded-lg bg-primary/15 p-2 border border-primary/30 shrink-0">
           <Megaphone className="h-5 w-5 text-primary" />
         </div>
-        <h2 className="font-display text-lg text-silver tracking-widest">CANAL DE OUVIDORIA E ALERTAS</h2>
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">CANAL DE OUVIDORIA</h2>
       </header>
 
       <form onSubmit={submit} className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input placeholder="Nome (opcional)" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="bg-input/60 border-primary/30 focus-visible:ring-primary" />
           <Input placeholder="Matrícula (opcional)" value={form.matricula} onChange={e => setForm({ ...form, matricula: e.target.value })} className="bg-input/60 border-primary/30 focus-visible:ring-primary" />
         </div>

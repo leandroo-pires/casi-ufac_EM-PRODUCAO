@@ -14,11 +14,11 @@ const Editais = () => {
 
   return (
     <Layout>
-      <div className="container py-10">
-        <header className="mb-8">
-          <p className="mono text-xs text-primary mb-2">// /editais_avisos</p>
-          <h1 className="font-display text-4xl text-silver text-glow tracking-widest">EDITAIS & AVISOS</h1>
-          <p className="text-muted-foreground mt-2">Documentos oficiais do CASI UFAC disponíveis para download.</p>
+      <div className="container py-6 md:py-10">
+        <header className="mb-6 md:mb-8">
+          <p className="mono text-[10px] sm:text-xs text-primary mb-2">// /editais_avisos</p>
+          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-silver text-glow tracking-widest">EDITAIS & AVISOS</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">Documentos oficiais do CASI UFAC disponíveis para download.</p>
         </header>
 
         {items.length === 0 ? (
@@ -29,19 +29,21 @@ const Editais = () => {
         ) : (
           <div className="grid gap-3">
             {items.map(e => (
-              <article key={e.id} className="panel-base p-5 flex items-center gap-4 hover:border-primary/50 transition-colors group">
-                <div className="rounded-lg bg-primary/10 border border-primary/30 p-3 group-hover:shadow-[var(--glow-primary)] transition-shadow">
-                  <FileText className="h-7 w-7 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {e.categoria && <span className="mono text-[10px] uppercase text-primary border border-primary/30 px-1.5 rounded">{e.categoria}</span>}
-                    <span className="mono text-xs text-muted-foreground">{new Date(e.data_publicacao).toLocaleDateString("pt-BR")}</span>
+              <article key={e.id} className="panel-base p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:border-primary/50 transition-colors group">
+                <div className="flex items-start gap-3 sm:contents">
+                  <div className="rounded-lg bg-primary/10 border border-primary/30 p-2.5 sm:p-3 group-hover:shadow-[var(--glow-primary)] transition-shadow shrink-0">
+                    <FileText className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
                   </div>
-                  <h3 className="font-display text-lg text-foreground">{e.titulo}</h3>
-                  {e.descricao && <p className="text-sm text-muted-foreground line-clamp-1">{e.descricao}</p>}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      {e.categoria && <span className="mono text-[10px] uppercase text-primary border border-primary/30 px-1.5 rounded">{e.categoria}</span>}
+                      <span className="mono text-xs text-muted-foreground">{new Date(e.data_publicacao).toLocaleDateString("pt-BR")}</span>
+                    </div>
+                    <h3 className="font-display text-base sm:text-lg text-foreground leading-tight">{e.titulo}</h3>
+                    {e.descricao && <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mt-1">{e.descricao}</p>}
+                  </div>
                 </div>
-                <Button asChild className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase text-xs tracking-widest hover:shadow-[var(--glow-strong)]">
+                <Button asChild className="w-full sm:w-auto shrink-0 bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase text-xs tracking-widest hover:shadow-[var(--glow-strong)]">
                   <a href={e.pdf_url} target="_blank" rel="noopener noreferrer"><Download className="h-4 w-4 mr-2" /> Download PDF</a>
                 </Button>
               </article>
