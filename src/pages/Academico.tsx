@@ -1,4 +1,5 @@
 import { Layout } from "@/components/Layout";
+import { BackButton } from "@/components/BackButton";
 import { BookOpen, GraduationCap, Calendar, FileText } from "lucide-react";
 
 const cards = [
@@ -11,6 +12,7 @@ const cards = [
 const Academico = () => (
   <Layout>
     <div className="container py-6 md:py-10">
+      <BackButton to="/" label="Início" />
       <header className="mb-6 md:mb-8">
         <p className="mono text-[10px] sm:text-xs text-primary mb-2">// /academico</p>
         <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-silver text-glow tracking-widest">ACADÊMICO</h1>

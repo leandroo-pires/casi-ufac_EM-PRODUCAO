@@ -63,6 +63,12 @@ const Auth = () => {
       </div>
 
       <div className="relative w-full max-w-md panel-glow p-6 sm:p-8 animate-fade-up">
+        <button
+          onClick={() => navigate("/")}
+          className="mono text-[11px] uppercase tracking-widest text-primary/80 hover:text-primary flex items-center gap-1.5 mb-4 transition-colors group"
+        >
+          <span className="inline-block transition-transform group-hover:-translate-x-1">←</span> voltar ao início
+        </button>
         <div className="text-center mb-5 sm:mb-6">
           <img src={logo} alt="CASI" className="h-16 sm:h-20 w-auto mx-auto mb-3 drop-shadow-[0_0_15px_hsl(var(--primary)/0.6)]" />
           <div className="mono text-[10px] sm:text-xs text-primary mb-1">&gt; access_terminal --area=aluno</div>
