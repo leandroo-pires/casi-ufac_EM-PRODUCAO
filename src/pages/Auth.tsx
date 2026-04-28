@@ -1,0 +1,115 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Terminal, Lock, Mail, User as UserIcon } from "lucide-react";
+import { toast } from "sonner";
+import { z } from "zod";
+import logo from "@/assets/casi-logo.png";
+
+const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Mínimo 6 caracteres"),
+});
+const signupSchema = loginSchema.extend({
+  display_name: z.string().trim().min(2, "Nome muito curto").max(80),
+});
+
+const Auth = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [login, setLogin] = useState({ email: "", password: "" });
+  const [signup, setSignup] = useState({ display_name: "", email: "", password: "" });
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => session && navigate("/"));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => s && navigate("/"));
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const p = loginSchema.safeParse(login);
+    if (!p.success) return toast.error(p.error.errors[0].message);
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: p.data.email, password: p.data.password });
+    setLoading(false);
+    error ? toast.error(error.message) : toast.success("Acesso autorizado.");
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const p = signupSchema.safeParse(signup);
+    if (!p.success) return toast.error(p.error.errors[0].message);
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email: p.data.email,
+      password: p.data.password,
+      options: { emailRedirectTo: window.location.origin, data: { display_name: p.data.display_name } },
+    });
+    setLoading(false);
+    error ? toast.error(error.message) : toast.success("Cadastro realizado! Verifique seu email.");
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      <div className="absolute inset-0 mono text-[10px] text-primary/10 overflow-hidden p-6 leading-tight pointer-events-none select-none">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div key={i}>&gt; {Array.from({ length: 80 }).map(() => Math.random() > 0.5 ? "1" : "0").join("")}</div>
+        ))}
+      </div>
+
+      <div className="relative w-full max-w-md panel-glow p-8 animate-fade-up">
+        <div className="text-center mb-6">
+          <img src={logo} alt="CASI" className="h-20 w-auto mx-auto mb-3 drop-shadow-[0_0_15px_hsl(var(--primary)/0.6)]" />
+          <div className="mono text-xs text-primary mb-1">&gt; access_terminal --area=aluno</div>
+          <h1 className="font-display text-2xl text-silver tracking-widest flex items-center justify-center gap-2">
+            <Terminal className="h-5 w-5 text-primary animate-pulse" /> ÁREA DO ALUNO
+          </h1>
+        </div>
+
+        <Tabs defaultValue="login">
+          <TabsList className="grid grid-cols-2 w-full bg-input/60 border border-primary/30">
+            <TabsTrigger value="login" className="font-display text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Login</TabsTrigger>
+            <TabsTrigger value="signup" className="font-display text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Cadastro</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="login" className="mt-4">
+            <form onSubmit={handleLogin} className="space-y-3">
+              <Field icon={Mail} label="Email" type="email" value={login.email} onChange={v => setLogin({ ...login, email: v })} />
+              <Field icon={Lock} label="Senha" type="password" value={login.password} onChange={v => setLogin({ ...login, password: v })} />
+              <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest hover:shadow-[var(--glow-strong)]">
+                {loading ? "Autenticando..." : "Entrar no Sistema"}
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="signup" className="mt-4">
+            <form onSubmit={handleSignup} className="space-y-3">
+              <Field icon={UserIcon} label="Nome" value={signup.display_name} onChange={v => setSignup({ ...signup, display_name: v })} />
+              <Field icon={Mail} label="Email" type="email" value={signup.email} onChange={v => setSignup({ ...signup, email: v })} />
+              <Field icon={Lock} label="Senha" type="password" value={signup.password} onChange={v => setSignup({ ...signup, password: v })} />
+              <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest hover:shadow-[var(--glow-strong)]">
+                {loading ? "Registrando..." : "Criar Acesso"}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+
+        <p className="mono text-[10px] text-muted-foreground text-center mt-6">&gt; secure_connection :: AES-256 :: CASI.SYS</p>
+      </div>
+    </div>
+  );
+};
+
+const Field = ({ icon: Icon, label, type = "text", value, onChange }: any) => (
+  <div>
+    <Label className="mono text-[10px] uppercase tracking-widest text-primary mb-1 flex items-center gap-1.5"><Icon className="h-3 w-3" /> {label}</Label>
+    <Input type={type} value={value} onChange={e => onChange(e.target.value)} required className="bg-input/60 border-primary/30 focus-visible:ring-primary mono" />
+  </div>
+);
+
+export default Auth;
