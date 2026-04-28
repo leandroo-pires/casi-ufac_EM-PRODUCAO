@@ -133,9 +133,17 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          curso: string | null
+          data_nascimento: string | null
           display_name: string | null
+          github: string | null
           id: string
+          instagram: string | null
+          linkedin: string | null
           matricula: string | null
+          nickname: string | null
+          periodo: string | null
+          twitter: string | null
           updated_at: string
           user_id: string
         }
@@ -143,9 +151,17 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          curso?: string | null
+          data_nascimento?: string | null
           display_name?: string | null
+          github?: string | null
           id?: string
+          instagram?: string | null
+          linkedin?: string | null
           matricula?: string | null
+          nickname?: string | null
+          periodo?: string | null
+          twitter?: string | null
           updated_at?: string
           user_id: string
         }
@@ -153,9 +169,17 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          curso?: string | null
+          data_nascimento?: string | null
           display_name?: string | null
+          github?: string | null
           id?: string
+          instagram?: string | null
+          linkedin?: string | null
           matricula?: string | null
+          nickname?: string | null
+          periodo?: string | null
+          twitter?: string | null
           updated_at?: string
           user_id?: string
         }
