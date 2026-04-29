@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useBeforeUnload, useBlocker } from "react-router-dom";
+import { useNavigate, useBeforeUnload } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
 import { BackButton } from "@/components/BackButton";
@@ -17,6 +17,7 @@ import { z } from "zod";
 import {
   User as UserIcon, Camera, Save, LogOut, Instagram, Github, Linkedin, Twitter,
   GraduationCap, Calendar, AtSign, Loader2, Trash2, ShieldCheck, Shield, ShieldAlert,
+  KeyRound, Mail, Crown,
 } from "lucide-react";
 import {
   normalizeInstagram, normalizeTwitter, normalizeGithub, normalizeLinkedin,
