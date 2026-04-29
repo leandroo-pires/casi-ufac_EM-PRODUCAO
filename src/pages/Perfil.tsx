@@ -264,6 +264,12 @@ const Perfil = () => {
   // ---------- Troca de senha ----------
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      navigate("/auth");
+      return;
+    }
     if (!user?.email) return toast.error("Usuário sem email cadastrado");
     if (pwd.next.length < 8) return toast.error("A nova senha precisa ter ao menos 8 caracteres");
     if (pwd.next !== pwd.confirm) return toast.error("As senhas não coincidem");
@@ -285,6 +291,12 @@ const Perfil = () => {
   };
 
   const handleResetByEmail = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      navigate("/auth");
+      return;
+    }
     if (!user?.email) return toast.error("Usuário sem email cadastrado");
     setPwdResetLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
