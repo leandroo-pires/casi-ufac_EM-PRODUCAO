@@ -472,7 +472,7 @@ const Perfil = () => {
           </div>
         </form>
       </div>
-
+    </Layout>
   );
 };
 
