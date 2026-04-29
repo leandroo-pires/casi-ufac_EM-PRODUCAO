@@ -504,6 +504,62 @@ const Perfil = () => {
               )}
             </section>
 
+            {/* Troca de senha */}
+            <section className="panel-base p-5">
+              <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                <div>
+                  <h2 className="mono text-xs text-primary">// seguranca --senha</h2>
+                  <p className="text-xs text-muted-foreground mt-1">Altere sua senha informando a senha atual, ou receba um link por email.</p>
+                </div>
+                <KeyRound className="h-4 w-4 text-primary" />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <form onSubmit={handleChangePassword} className="space-y-3">
+                  <div>
+                    <Label className="mono text-[10px] uppercase tracking-widest text-primary mb-1 block">Senha atual</Label>
+                    <Input type="password" autoComplete="current-password" value={pwd.current}
+                      onChange={e => setPwd({ ...pwd, current: e.target.value })}
+                      className="bg-input/60 border-primary/30 focus-visible:ring-primary mono" />
+                  </div>
+                  <div>
+                    <Label className="mono text-[10px] uppercase tracking-widest text-primary mb-1 block">Nova senha</Label>
+                    <Input type="password" autoComplete="new-password" minLength={8} value={pwd.next}
+                      onChange={e => setPwd({ ...pwd, next: e.target.value })}
+                      className="bg-input/60 border-primary/30 focus-visible:ring-primary mono" />
+                  </div>
+                  <div>
+                    <Label className="mono text-[10px] uppercase tracking-widest text-primary mb-1 block">Confirmar nova senha</Label>
+                    <Input type="password" autoComplete="new-password" minLength={8} value={pwd.confirm}
+                      onChange={e => setPwd({ ...pwd, confirm: e.target.value })}
+                      className="bg-input/60 border-primary/30 focus-visible:ring-primary mono" />
+                  </div>
+                  <Button type="submit" disabled={pwdLoading || !pwd.current || !pwd.next || !pwd.confirm}
+                    className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest">
+                    {pwdLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <KeyRound className="h-4 w-4 mr-2" />}
+                    {pwdLoading ? "Alterando..." : "Alterar senha"}
+                  </Button>
+                </form>
+
+                <div className="rounded-md border border-primary/20 bg-card/40 p-4 flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <h3 className="mono text-[11px] uppercase tracking-widest text-silver">Trocar por email</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3 flex-1">
+                    Esqueceu a senha atual? Enviaremos um link de redefinição para o email cadastrado:
+                    <br />
+                    <span className="mono text-primary break-all">{user?.email}</span>
+                  </p>
+                  <Button type="button" variant="outline" onClick={handleResetByEmail} disabled={pwdResetLoading}
+                    className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-display uppercase text-[11px] tracking-widest">
+                    {pwdResetLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                    {pwdResetLoading ? "Enviando..." : "Enviar link por email"}
+                  </Button>
+                </div>
+              </div>
+            </section>
+
             <div className="flex flex-wrap gap-3 items-center">
               <Button type="submit" disabled={saving || !dirty || Object.keys(errors).length > 0}
                 className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest hover:shadow-[var(--glow-strong)]">
