@@ -76,17 +76,20 @@ const Perfil = () => {
   const [enrollCode, setEnrollCode] = useState("");
   const [twoFaBusy, setTwoFaBusy] = useState(false);
 
+  // Admin flag
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Troca de senha
+  const [pwd, setPwd] = useState({ current: "", next: "", confirm: "" });
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdResetLoading, setPwdResetLoading] = useState(false);
+
   const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initial), [form, initial]);
 
   // Aviso de saída (refresh / fechar aba)
   useBeforeUnload((e) => {
     if (dirty) { e.preventDefault(); (e as any).returnValue = ""; }
   });
-
-  // Bloqueio de navegação interna
-  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
-    dirty && currentLocation.pathname !== nextLocation.pathname
-  );
 
   const loadFactors = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
