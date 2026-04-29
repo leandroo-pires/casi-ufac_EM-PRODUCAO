@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -19,6 +21,7 @@ const categorias = ["Infraestrutura", "Disciplina", "Coordenação", "Eventos", 
 
 export const OuvidoriaPanel = () => {
   const [form, setForm] = useState({ nome: "", matricula: "", categoria: "", mensagem: "" });
+  const [anonimo, setAnonimo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [recent, setRecent] = useState<any[]>([]);
 
@@ -37,14 +40,14 @@ export const OuvidoriaPanel = () => {
     }
     setLoading(true);
     const { error } = await supabase.from("ouvidorias").insert({
-      nome: parsed.data.nome || null,
-      matricula: parsed.data.matricula || null,
+      nome: anonimo ? null : (parsed.data.nome || null),
+      matricula: anonimo ? null : (parsed.data.matricula || null),
       categoria: parsed.data.categoria,
       mensagem: parsed.data.mensagem,
     });
     setLoading(false);
     if (error) { toast.error("Erro ao enviar. Tente novamente."); return; }
-    toast.success("Ouvidoria enviada com sucesso!");
+    toast.success(anonimo ? "Ouvidoria anônima enviada!" : "Ouvidoria enviada com sucesso!");
     setForm({ nome: "", matricula: "", categoria: "", mensagem: "" });
   };
 
@@ -58,9 +61,16 @@ export const OuvidoriaPanel = () => {
       </header>
 
       <form onSubmit={submit} className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input placeholder="Nome (opcional)" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="bg-input/60 border-primary/30 focus-visible:ring-primary" />
-          <Input placeholder="Matrícula (opcional)" value={form.matricula} onChange={e => setForm({ ...form, matricula: e.target.value })} className="bg-input/60 border-primary/30 focus-visible:ring-primary" />
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-background/40 px-3 py-2">
+          <Label htmlFor="anonimo" className="text-xs sm:text-sm cursor-pointer flex flex-col">
+            <span className="font-display tracking-widest uppercase text-primary">Enviar Anonimamente</span>
+            <span className="text-[10px] mono text-muted-foreground">// nome e matrícula serão descartados</span>
+          </Label>
+          <Switch id="anonimo" checked={anonimo} onCheckedChange={setAnonimo} />
+        </div>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 transition-opacity ${anonimo ? "opacity-40 pointer-events-none" : ""}`}>
+          <Input placeholder="Nome (opcional)" value={form.nome} disabled={anonimo} onChange={e => setForm({ ...form, nome: e.target.value })} className="bg-input/60 border-primary/30 focus-visible:ring-primary" />
+          <Input placeholder="Matrícula (opcional)" value={form.matricula} disabled={anonimo} onChange={e => setForm({ ...form, matricula: e.target.value })} className="bg-input/60 border-primary/30 focus-visible:ring-primary" />
         </div>
         <Select value={form.categoria} onValueChange={v => setForm({ ...form, categoria: v })}>
           <SelectTrigger className="bg-input/60 border-primary/30"><SelectValue placeholder="Categoria" /></SelectTrigger>
