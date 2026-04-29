@@ -25,6 +25,19 @@ const forgotSchema = z.object({ email: z.string().email("Email inválido") });
 
 const SUPPORT_EMAIL = "casi@ufac.br";
 
+const errorWithSupport = (msg: string) =>
+  toast.error(msg, {
+    description: (
+      <span className="text-xs">
+        Precisa de ajuda? Fale com o suporte:{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary underline mono">
+          {SUPPORT_EMAIL}
+        </a>
+      </span>
+    ) as any,
+    duration: 7000,
+  });
+
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -45,17 +58,17 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const p = loginSchema.safeParse(login);
-    if (!p.success) return toast.error(p.error.errors[0].message);
+    if (!p.success) return errorWithSupport(p.error.errors[0].message);
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: p.data.email, password: p.data.password });
     setLoading(false);
-    error ? toast.error(error.message) : toast.success("Acesso autorizado.");
+    error ? errorWithSupport(error.message) : toast.success("Acesso autorizado.");
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     const p = signupSchema.safeParse(signup);
-    if (!p.success) return toast.error(p.error.errors[0].message);
+    if (!p.success) return errorWithSupport(p.error.errors[0].message);
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email: p.data.email,
@@ -63,7 +76,7 @@ const Auth = () => {
       options: { emailRedirectTo: window.location.origin, data: { display_name: p.data.display_name } },
     });
     setLoading(false);
-    error ? toast.error(error.message) : toast.success("Cadastro realizado! Verifique seu email.");
+    error ? errorWithSupport(error.message) : toast.success("Cadastro realizado! Verifique seu email.");
   };
 
   const handleGoogle = async () => {
@@ -71,7 +84,7 @@ const Auth = () => {
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (result.error) {
       setOauthLoading(false);
-      toast.error("Falha ao entrar com Google");
+      errorWithSupport("Falha ao entrar com Google");
       return;
     }
     if (result.redirected) return;
