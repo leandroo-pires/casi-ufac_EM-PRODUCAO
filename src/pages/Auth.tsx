@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Terminal, Lock, Mail, User as UserIcon } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Terminal, Lock, Mail, User as UserIcon, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import logo from "@/assets/casi-logo.png";
@@ -18,6 +21,9 @@ const loginSchema = z.object({
 const signupSchema = loginSchema.extend({
   display_name: z.string().trim().min(2, "Nome muito curto").max(80),
 });
+const forgotSchema = z.object({ email: z.string().email("Email inválido") });
+
+const SUPPORT_EMAIL = "casi@ufac.br";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -25,6 +31,10 @@ const Auth = () => {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [login, setLogin] = useState({ email: "", password: "" });
   const [signup, setSignup] = useState({ display_name: "", email: "", password: "" });
+
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => session && navigate("/"));
@@ -64,8 +74,23 @@ const Auth = () => {
       toast.error("Falha ao entrar com Google");
       return;
     }
-    if (result.redirected) return; // browser navega
+    if (result.redirected) return;
     navigate("/");
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const p = forgotSchema.safeParse({ email: forgotEmail });
+    if (!p.success) return toast.error(p.error.errors[0].message);
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(p.data.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Enviamos um link de recuperação para seu email.");
+    setForgotOpen(false);
+    setForgotEmail("");
   };
 
   return (
@@ -101,6 +126,15 @@ const Auth = () => {
             <form onSubmit={handleLogin} className="space-y-3">
               <Field icon={Mail} label="Email" type="email" value={login.email} onChange={v => setLogin({ ...login, email: v })} />
               <Field icon={Lock} label="Senha" type="password" value={login.password} onChange={v => setLogin({ ...login, password: v })} />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => { setForgotEmail(login.email); setForgotOpen(true); }}
+                  className="mono text-[10px] uppercase tracking-widest text-primary/80 hover:text-primary transition-colors"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
               <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest hover:shadow-[var(--glow-strong)]">
                 {loading ? "Autenticando..." : "Entrar no Sistema"}
               </Button>
@@ -138,8 +172,38 @@ const Auth = () => {
           {oauthLoading ? "Conectando..." : "Continuar com Google"}
         </Button>
 
-        <p className="mono text-[10px] text-muted-foreground text-center mt-6">&gt; secure_connection :: AES-256 :: CASI.SYS</p>
+        {/* Suporte */}
+        <div className="mt-6 rounded-md border border-primary/20 bg-card/40 px-3 py-2.5 flex items-start gap-2">
+          <LifeBuoy className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Problemas para acessar ou se cadastrar? Fale com o suporte do CASI:{" "}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline mono">{SUPPORT_EMAIL}</a>
+          </p>
+        </div>
+
+        <p className="mono text-[10px] text-muted-foreground text-center mt-4">&gt; secure_connection :: AES-256 :: CASI.SYS</p>
       </div>
+
+      {/* Dialog: esqueci minha senha */}
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="bg-background border-primary/30">
+          <DialogHeader>
+            <DialogTitle className="font-display tracking-widest text-silver">Recuperar senha</DialogTitle>
+            <DialogDescription>
+              Informe seu email cadastrado. Enviaremos um link para você criar uma nova senha.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgot} className="space-y-3">
+            <Field icon={Mail} label="Email" type="email" value={forgotEmail} onChange={setForgotEmail} />
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setForgotOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={forgotLoading} className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest">
+                {forgotLoading ? "Enviando..." : "Enviar link"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useBeforeUnload, useBlocker } from "react-router-dom";
+import { useNavigate, useBeforeUnload } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
 import { BackButton } from "@/components/BackButton";
@@ -8,15 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
   User as UserIcon, Camera, Save, LogOut, Instagram, Github, Linkedin, Twitter,
   GraduationCap, Calendar, AtSign, Loader2, Trash2, ShieldCheck, Shield, ShieldAlert,
+  KeyRound, Mail, Crown,
 } from "lucide-react";
 import {
   normalizeInstagram, normalizeTwitter, normalizeGithub, normalizeLinkedin,
@@ -75,17 +72,20 @@ const Perfil = () => {
   const [enrollCode, setEnrollCode] = useState("");
   const [twoFaBusy, setTwoFaBusy] = useState(false);
 
+  // Admin flag
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Troca de senha
+  const [pwd, setPwd] = useState({ current: "", next: "", confirm: "" });
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdResetLoading, setPwdResetLoading] = useState(false);
+
   const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initial), [form, initial]);
 
   // Aviso de saída (refresh / fechar aba)
   useBeforeUnload((e) => {
     if (dirty) { e.preventDefault(); (e as any).returnValue = ""; }
   });
-
-  // Bloqueio de navegação interna
-  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
-    dirty && currentLocation.pathname !== nextLocation.pathname
-  );
 
   const loadFactors = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
@@ -115,6 +115,11 @@ const Perfil = () => {
         setForm(next); setInitial(next);
         setAvatar(data.avatar_url ?? null);
       }
+      // checa role admin
+      const { data: roleRow } = await supabase
+        .from("user_roles").select("role")
+        .eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
+      setIsAdmin(!!roleRow);
       await loadFactors();
       setLoading(false);
     };
@@ -256,6 +261,40 @@ const Perfil = () => {
     await loadFactors();
   };
 
+  // ---------- Troca de senha ----------
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.email) return toast.error("Usuário sem email cadastrado");
+    if (pwd.next.length < 8) return toast.error("A nova senha precisa ter ao menos 8 caracteres");
+    if (pwd.next !== pwd.confirm) return toast.error("As senhas não coincidem");
+    if (pwd.current === pwd.next) return toast.error("A nova senha deve ser diferente da atual");
+    setPwdLoading(true);
+    // Reautentica com a senha atual
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: user.email, password: pwd.current,
+    });
+    if (authError) {
+      setPwdLoading(false);
+      return toast.error("Senha atual incorreta");
+    }
+    const { error } = await supabase.auth.updateUser({ password: pwd.next });
+    setPwdLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Senha alterada com sucesso!");
+    setPwd({ current: "", next: "", confirm: "" });
+  };
+
+  const handleResetByEmail = async () => {
+    if (!user?.email) return toast.error("Usuário sem email cadastrado");
+    setPwdResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setPwdResetLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Enviamos um link de redefinição para seu email.");
+  };
+
   if (loading) {
     return <Layout><div className="container py-20 flex items-center justify-center"><Loader2 className="h-8 w-8 text-primary animate-spin" /></div></Layout>;
   }
@@ -277,6 +316,15 @@ const Perfil = () => {
           <aside className="space-y-5 md:sticky md:top-24 self-start">
             <div className="panel-glow p-5 flex flex-col items-center gap-4">
               <div className="relative">
+                {isAdmin && (
+                  <div
+                    className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-gradient-to-br from-gold to-yellow-500 p-1.5 border-2 border-background shadow-[0_0_12px_hsl(45_100%_60%/0.6)]"
+                    title="Administrador"
+                    aria-label="Administrador"
+                  >
+                    <Crown className="h-4 w-4 text-background" fill="currentColor" />
+                  </div>
+                )}
                 <div className="h-32 w-32 rounded-full p-1 bg-gradient-to-br from-primary to-primary-glow shadow-[var(--glow-primary)]">
                   <div className="h-full w-full rounded-full bg-background overflow-hidden flex items-center justify-center">
                     {avatar ? (
@@ -452,6 +500,62 @@ const Perfil = () => {
               )}
             </section>
 
+            {/* Troca de senha */}
+            <section className="panel-base p-5">
+              <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                <div>
+                  <h2 className="mono text-xs text-primary">// seguranca --senha</h2>
+                  <p className="text-xs text-muted-foreground mt-1">Altere sua senha informando a senha atual, ou receba um link por email.</p>
+                </div>
+                <KeyRound className="h-4 w-4 text-primary" />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <form onSubmit={handleChangePassword} className="space-y-3">
+                  <div>
+                    <Label className="mono text-[10px] uppercase tracking-widest text-primary mb-1 block">Senha atual</Label>
+                    <Input type="password" autoComplete="current-password" value={pwd.current}
+                      onChange={e => setPwd({ ...pwd, current: e.target.value })}
+                      className="bg-input/60 border-primary/30 focus-visible:ring-primary mono" />
+                  </div>
+                  <div>
+                    <Label className="mono text-[10px] uppercase tracking-widest text-primary mb-1 block">Nova senha</Label>
+                    <Input type="password" autoComplete="new-password" minLength={8} value={pwd.next}
+                      onChange={e => setPwd({ ...pwd, next: e.target.value })}
+                      className="bg-input/60 border-primary/30 focus-visible:ring-primary mono" />
+                  </div>
+                  <div>
+                    <Label className="mono text-[10px] uppercase tracking-widest text-primary mb-1 block">Confirmar nova senha</Label>
+                    <Input type="password" autoComplete="new-password" minLength={8} value={pwd.confirm}
+                      onChange={e => setPwd({ ...pwd, confirm: e.target.value })}
+                      className="bg-input/60 border-primary/30 focus-visible:ring-primary mono" />
+                  </div>
+                  <Button type="submit" disabled={pwdLoading || !pwd.current || !pwd.next || !pwd.confirm}
+                    className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest">
+                    {pwdLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <KeyRound className="h-4 w-4 mr-2" />}
+                    {pwdLoading ? "Alterando..." : "Alterar senha"}
+                  </Button>
+                </form>
+
+                <div className="rounded-md border border-primary/20 bg-card/40 p-4 flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <h3 className="mono text-[11px] uppercase tracking-widest text-silver">Trocar por email</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3 flex-1">
+                    Esqueceu a senha atual? Enviaremos um link de redefinição para o email cadastrado:
+                    <br />
+                    <span className="mono text-primary break-all">{user?.email}</span>
+                  </p>
+                  <Button type="button" variant="outline" onClick={handleResetByEmail} disabled={pwdResetLoading}
+                    className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-display uppercase text-[11px] tracking-widest">
+                    {pwdResetLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                    {pwdResetLoading ? "Enviando..." : "Enviar link por email"}
+                  </Button>
+                </div>
+              </div>
+            </section>
+
             <div className="flex flex-wrap gap-3 items-center">
               <Button type="submit" disabled={saving || !dirty || Object.keys(errors).length > 0}
                 className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest hover:shadow-[var(--glow-strong)]">
@@ -463,22 +567,6 @@ const Perfil = () => {
           </div>
         </form>
       </div>
-
-      {/* Aviso de saída para navegação interna */}
-      <AlertDialog open={blocker.state === "blocked"} onOpenChange={(o) => { if (!o && blocker.state === "blocked") blocker.reset?.(); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sair sem salvar?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você tem alterações não salvas no perfil. Deseja descartá-las e sair?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => blocker.reset?.()}>Continuar editando</AlertDialogCancel>
-            <AlertDialogAction onClick={() => blocker.proceed?.()}>Descartar e sair</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Layout>
   );
 };
