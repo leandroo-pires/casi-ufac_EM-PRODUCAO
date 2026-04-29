@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ const signupSchema = loginSchema.extend({
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [login, setLogin] = useState({ email: "", password: "" });
   const [signup, setSignup] = useState({ display_name: "", email: "", password: "" });
 
@@ -52,6 +54,18 @@ const Auth = () => {
     });
     setLoading(false);
     error ? toast.error(error.message) : toast.success("Cadastro realizado! Verifique seu email.");
+  };
+
+  const handleGoogle = async () => {
+    setOauthLoading(true);
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (result.error) {
+      setOauthLoading(false);
+      toast.error("Falha ao entrar com Google");
+      return;
+    }
+    if (result.redirected) return; // browser navega
+    navigate("/");
   };
 
   return (
@@ -104,6 +118,25 @@ const Auth = () => {
             </form>
           </TabsContent>
         </Tabs>
+
+        {/* Divisor + Google */}
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-primary/20" />
+          <span className="mono text-[10px] uppercase tracking-widest text-muted-foreground">ou</span>
+          <div className="h-px flex-1 bg-primary/20" />
+        </div>
+        <Button
+          type="button"
+          onClick={handleGoogle}
+          disabled={oauthLoading}
+          variant="outline"
+          className="w-full bg-background/60 border-primary/40 hover:bg-primary/10 hover:border-primary text-foreground font-display uppercase tracking-wider text-xs"
+        >
+          <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" aria-hidden>
+            <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.5 14.6 2.5 12 2.5 6.8 2.5 2.5 6.8 2.5 12S6.8 21.5 12 21.5c6.9 0 9.5-4.8 9.5-9.4 0-.6-.1-1.2-.2-1.9H12z"/>
+          </svg>
+          {oauthLoading ? "Conectando..." : "Continuar com Google"}
+        </Button>
 
         <p className="mono text-[10px] text-muted-foreground text-center mt-6">&gt; secure_connection :: AES-256 :: CASI.SYS</p>
       </div>
