@@ -14,12 +14,17 @@ const Index = () => (
           <img src={logo} alt="" className="h-56 sm:h-72 md:h-96 w-auto" />
         </div>
         <div className="relative max-w-2xl">
-          <p className="mono text-[10px] sm:text-xs text-primary mb-2 sm:mb-3 tracking-widest">// SYS_INFO :: CASI.UFAC.BR</p>
+          <p className="mono text-[10px] sm:text-xs text-primary mb-2 sm:mb-3 tracking-widest">
+            // SYS_INFO :: CASI.UFAC.BR
+          </p>
           <h1 className="font-display text-2xl sm:text-4xl md:text-6xl font-black text-silver text-glow mb-3 sm:mb-4 leading-tight">
-            CENTRO ACADÊMICO<br /><span className="text-primary">SISTEMAS DE INFORMAÇÃO</span>
+            CENTRO ACADÊMICO
+            <br />
+            <span className="text-primary">SISTEMAS DE INFORMAÇÃO</span>
           </h1>
           <p className="text-sm sm:text-base md:text-lg text-foreground/80 max-w-xl">
-            Portal oficial do CASI — voz dos alunos, hub de eventos, ouvidoria e mídia da comunidade tech UFAC.
+            Portal oficial do CASI — voz dos alunos, hub de eventos, ouvidoria e mídia da comunidade de S.I da
+            Universidade Federal do Acre.
           </p>
         </div>
       </div>
