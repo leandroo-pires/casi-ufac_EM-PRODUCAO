@@ -84,17 +84,21 @@ const Admin = () => {
         </header>
 
         <Tabs defaultValue="editais" className="w-full">
-          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 gap-1 h-auto p-1 mb-4">
+          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 h-auto p-1 mb-4">
             <TabsTrigger value="editais" className="font-display text-xs uppercase tracking-widest">Editais</TabsTrigger>
             <TabsTrigger value="eventos" className="font-display text-xs uppercase tracking-widest">Eventos</TabsTrigger>
             <TabsTrigger value="avisos" className="font-display text-xs uppercase tracking-widest">Avisos</TabsTrigger>
             <TabsTrigger value="ouvidorias" className="font-display text-xs uppercase tracking-widest">Ouvidorias</TabsTrigger>
+            <TabsTrigger value="diretoria" className="font-display text-xs uppercase tracking-widest">Diretoria</TabsTrigger>
+            <TabsTrigger value="conteudo" className="font-display text-xs uppercase tracking-widest">Conteúdo</TabsTrigger>
           </TabsList>
 
           <TabsContent value="editais"><CrudPanel table="editais" categoria="Edital" /></TabsContent>
           <TabsContent value="eventos"><CrudPanel table="eventos" /></TabsContent>
           <TabsContent value="avisos"><CrudPanel table="editais" categoria="Aviso" labelOverride="Avisos" /></TabsContent>
           <TabsContent value="ouvidorias"><OuvidoriasPanel /></TabsContent>
+          <TabsContent value="diretoria"><DiretoriaPanel /></TabsContent>
+          <TabsContent value="conteudo"><ConteudoPanel /></TabsContent>
         </Tabs>
       </div>
     </Layout>
