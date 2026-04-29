@@ -30,14 +30,14 @@ export const Footer = () => (
         <h4 className="font-display text-sm uppercase text-silver mb-4 tracking-widest">Redes</h4>
         <div className="flex gap-3 flex-wrap">
           <a
-            href="#"
+            href="https://www.instagram.com/casi.ufac/"
             aria-label="Instagram"
             className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all"
           >
             <Instagram className="h-4 w-4" />
           </a>
           <a
-            href="mailto:casi@ufac.br"
+            href="ufac.casi@gmail.com"
             aria-label="Email CASI"
             className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all"
           >
