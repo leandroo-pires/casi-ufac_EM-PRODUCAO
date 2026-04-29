@@ -119,6 +119,11 @@ const Perfil = () => {
         setForm(next); setInitial(next);
         setAvatar(data.avatar_url ?? null);
       }
+      // checa role admin
+      const { data: roleRow } = await supabase
+        .from("user_roles").select("role")
+        .eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
+      setIsAdmin(!!roleRow);
       await loadFactors();
       setLoading(false);
     };
