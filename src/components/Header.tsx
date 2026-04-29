@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Search, User, LogIn, LogOut, Menu } from "lucide-react";
+import { Search, User, LogIn, LogOut, Menu, Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/casi-logo.png";
@@ -88,6 +88,15 @@ export const Header = () => {
             aria-label="Perfil"
           >
             <span className="relative shrink-0 rounded-full p-0.5 bg-gradient-to-br from-primary to-primary-glow">
+              {isAdmin && (
+                <span
+                  className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 rounded-full bg-gradient-to-br from-gold to-yellow-500 p-0.5 border border-background shadow-[0_0_8px_hsl(45_100%_60%/0.6)]"
+                  title="Administrador"
+                  aria-label="Administrador"
+                >
+                  <Crown className="h-2.5 w-2.5 text-background" fill="currentColor" />
+                </span>
+              )}
               <span className="block rounded-full bg-background overflow-hidden h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
