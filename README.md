@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Bem vindo ao primeiro projeto do CASI - Centro Acadêmico de Sistemas de Informação
 
-TODO: Document your project here
+Aqui desenvolveremos mais da aplicação em prol da organização e bla bla bla
