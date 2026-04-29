@@ -84,17 +84,21 @@ const Admin = () => {
         </header>
 
         <Tabs defaultValue="editais" className="w-full">
-          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 gap-1 h-auto p-1 mb-4">
+          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 h-auto p-1 mb-4">
             <TabsTrigger value="editais" className="font-display text-xs uppercase tracking-widest">Editais</TabsTrigger>
             <TabsTrigger value="eventos" className="font-display text-xs uppercase tracking-widest">Eventos</TabsTrigger>
             <TabsTrigger value="avisos" className="font-display text-xs uppercase tracking-widest">Avisos</TabsTrigger>
             <TabsTrigger value="ouvidorias" className="font-display text-xs uppercase tracking-widest">Ouvidorias</TabsTrigger>
+            <TabsTrigger value="diretoria" className="font-display text-xs uppercase tracking-widest">Diretoria</TabsTrigger>
+            <TabsTrigger value="conteudo" className="font-display text-xs uppercase tracking-widest">Conteúdo</TabsTrigger>
           </TabsList>
 
           <TabsContent value="editais"><CrudPanel table="editais" categoria="Edital" /></TabsContent>
           <TabsContent value="eventos"><CrudPanel table="eventos" /></TabsContent>
           <TabsContent value="avisos"><CrudPanel table="editais" categoria="Aviso" labelOverride="Avisos" /></TabsContent>
           <TabsContent value="ouvidorias"><OuvidoriasPanel /></TabsContent>
+          <TabsContent value="diretoria"><DiretoriaPanel /></TabsContent>
+          <TabsContent value="conteudo"><ConteudoPanel /></TabsContent>
         </Tabs>
       </div>
     </Layout>
@@ -296,6 +300,188 @@ const OuvidoriasPanel = () => {
               </div>
             </li>
           ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+/* ---------- Painel da Diretoria ---------- */
+const DiretoriaPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AnyRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("diretoria" as any).select("*") as any).order("ordem", { ascending: true });
+    if (error) toast.error("Erro ao carregar diretoria"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openNew = () => {
+    setEditing({ nome: "", cargo: "", bio: "", foto_url: "", email: "", instagram: "", github: "", linkedin: "", whatsapp: "", ordem: rows.length, ativo: true });
+    setOpen(true);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!editing) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("diretoria").upload(path, file, { upsert: false });
+    if (upErr) { toast.error("Falha no upload: " + upErr.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("diretoria").getPublicUrl(path);
+    setEditing({ ...editing, foto_url: data.publicUrl });
+    setUploading(false);
+    toast.success("Foto enviada");
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.nome || !editing.cargo) { toast.error("Nome e cargo são obrigatórios"); return; }
+    const payload: AnyRow = { ...editing };
+    Object.keys(payload).forEach(k => { if (payload[k] === "") payload[k] = null; });
+    const { id, created_at, updated_at, ...rest } = payload;
+    const tbl: any = supabase.from("diretoria" as any);
+    const res = id ? await tbl.update(rest).eq("id", id) : await tbl.insert(rest);
+    if (res.error) toast.error("Erro: " + res.error.message);
+    else { toast.success("Salvo"); setOpen(false); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Remover este membro?")) return;
+    const { error } = await (supabase.from("diretoria" as any) as any).delete().eq("id", id);
+    if (error) toast.error("Erro"); else { toast.success("Removido"); load(); }
+  };
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">DIRETORIA</h2>
+        <Button onClick={openNew} size="sm" className="bg-primary text-primary-foreground"><Plus className="h-4 w-4 mr-1" /> Novo membro</Button>
+      </div>
+
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground mono text-sm py-8">// nenhum membro cadastrado</p>
+      ) : (
+        <ul className="grid sm:grid-cols-2 gap-3">
+          {rows.map(m => (
+            <li key={m.id} className="rounded-lg border border-primary/20 bg-background/40 p-3 flex gap-3 items-center">
+              <div className="h-12 w-12 rounded-full overflow-hidden bg-primary/10 shrink-0 flex items-center justify-center">
+                {m.foto_url ? <img src={m.foto_url} alt="" className="h-full w-full object-cover" /> : <span>👤</span>}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold truncate">{m.nome}</div>
+                <div className="text-[10px] mono text-primary uppercase truncate">{m.cargo}</div>
+                <div className="text-[10px] text-muted-foreground">Ordem: {m.ordem} · {m.ativo ? "ativo" : "inativo"}</div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <Button size="icon" variant="ghost" onClick={() => { setEditing(m); setOpen(true); }} className="h-7 w-7 text-primary"><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" onClick={() => del(m.id)} className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card border-primary/40 max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display tracking-widest">{editing?.id ? "EDITAR MEMBRO" : "NOVO MEMBRO"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-16 w-16 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center border border-primary/30">
+                  {editing.foto_url ? <img src={editing.foto_url} alt="" className="h-full w-full object-cover" /> : <span className="text-2xl">👤</span>}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <Input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])} disabled={uploading} className="bg-input/60 border-primary/30 text-xs" />
+                  {editing.foto_url && <Button size="sm" variant="outline" onClick={() => setEditing({ ...editing, foto_url: "" })}>Remover foto</Button>}
+                </div>
+              </div>
+              {[
+                { k: "nome", l: "Nome*" }, { k: "cargo", l: "Cargo*" },
+                { k: "email", l: "E-mail" }, { k: "instagram", l: "Instagram (@)" },
+                { k: "github", l: "GitHub (@)" }, { k: "linkedin", l: "LinkedIn" },
+                { k: "whatsapp", l: "WhatsApp (telefone)" },
+              ].map(f => (
+                <div key={f.k}>
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">{f.l}</Label>
+                  <Input value={editing[f.k] ?? ""} onChange={e => setEditing({ ...editing, [f.k]: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+                </div>
+              ))}
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Bio</Label>
+                <Textarea value={editing.bio ?? ""} onChange={e => setEditing({ ...editing, bio: e.target.value })} rows={3} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ordem</Label>
+                  <Input type="number" value={editing.ordem ?? 0} onChange={e => setEditing({ ...editing, ordem: parseInt(e.target.value) || 0 })} className="bg-input/60 border-primary/30 mt-1" />
+                </div>
+                <div className="flex flex-col justify-end pb-1">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Ativo</Label>
+                  <Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} className="bg-primary text-primary-foreground">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/* ---------- Painel de Conteúdo do site ---------- */
+const ConteudoPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [edits, setEdits] = useState<Record<string, AnyRow>>({});
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("site_content" as any).select("*") as any).order("chave");
+    if (error) toast.error("Erro ao carregar"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const save = async (row: AnyRow) => {
+    const patch = edits[row.id];
+    if (!patch) return;
+    const { error } = await (supabase.from("site_content" as any) as any).update({ titulo: patch.titulo, conteudo: patch.conteudo }).eq("id", row.id);
+    if (error) toast.error("Erro: " + error.message);
+    else { toast.success("Salvo"); setEdits(s => { const n = { ...s }; delete n[row.id]; return n; }); load(); }
+  };
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest mb-4">CONTEÚDO DO SITE</h2>
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : (
+        <ul className="space-y-4">
+          {rows.map(r => {
+            const cur = edits[r.id] ?? r;
+            const dirty = !!edits[r.id];
+            return (
+              <li key={r.id} className="rounded-lg border border-primary/20 bg-background/40 p-4">
+                <div className="text-[10px] mono text-primary uppercase tracking-widest mb-2">// {r.chave}</div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Título</Label>
+                <Input value={cur.titulo ?? ""} onChange={e => setEdits(s => ({ ...s, [r.id]: { ...cur, titulo: e.target.value } }))} className="bg-input/60 border-primary/30 mt-1 mb-3" />
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Conteúdo</Label>
+                <Textarea value={cur.conteudo ?? ""} onChange={e => setEdits(s => ({ ...s, [r.id]: { ...cur, conteudo: e.target.value } }))} rows={4} className="bg-input/60 border-primary/30 mt-1" />
+                <div className="flex justify-end mt-2">
+                  <Button size="sm" disabled={!dirty} onClick={() => save(r)} className="bg-primary text-primary-foreground">Salvar</Button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

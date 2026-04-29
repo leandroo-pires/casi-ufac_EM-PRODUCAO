@@ -1,11 +1,16 @@
 import { Instagram, Github, Mail, MapPin, Twitch } from "lucide-react";
 import logo from "@/assets/casi-logo.png";
+import ufacLogo from "@/assets/ufac-logo.png";
 
 export const Footer = () => (
   <footer className="mt-12 md:mt-20 border-t border-primary/20 bg-card/40 backdrop-blur-sm">
     <div className="container py-8 md:py-12 grid gap-8 md:gap-10 sm:grid-cols-2 md:grid-cols-3">
       <div className="sm:col-span-2 md:col-span-1">
-        <img src={logo} alt="CASI UFAC" className="h-16 sm:h-20 w-auto mb-3" />
+        <div className="flex items-center gap-3 mb-3">
+          <img src={logo} alt="CASI UFAC" className="h-16 sm:h-20 w-auto" />
+          <span className="h-12 w-px bg-primary/30" aria-hidden />
+          <img src={ufacLogo} alt="Universidade Federal do Acre" className="h-12 sm:h-14 w-auto opacity-90" />
+        </div>
         <p className="text-sm text-muted-foreground max-w-xs">
           Centro Acadêmico de Sistemas de Informação — Universidade Federal do Acre.
         </p>

@@ -50,8 +50,6 @@ export const Header = () => {
       <div className="container flex h-16 md:h-20 items-center gap-3 md:gap-6">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
           <img src={logo} alt="Logo CASI - Centro Acadêmico de Sistemas de Informação" className="h-9 sm:h-10 md:h-14 w-auto drop-shadow-[0_0_10px_hsl(var(--primary)/0.6)]" />
-          <span className="hidden sm:inline-block h-8 md:h-10 w-px bg-primary/30" aria-hidden />
-          <img src={ufacLogo} alt="Universidade Federal do Acre" className="hidden sm:block h-7 md:h-10 w-auto opacity-90" />
         </Link>
 
         <nav className="hidden lg:flex items-center mx-auto">

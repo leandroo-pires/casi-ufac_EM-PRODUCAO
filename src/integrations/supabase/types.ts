@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      diretoria: {
+        Row: {
+          ativo: boolean
+          bio: string | null
+          cargo: string
+          created_at: string
+          email: string | null
+          foto_url: string | null
+          github: string | null
+          id: string
+          instagram: string | null
+          linkedin: string | null
+          nome: string
+          ordem: number
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          bio?: string | null
+          cargo: string
+          created_at?: string
+          email?: string | null
+          foto_url?: string | null
+          github?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          nome: string
+          ordem?: number
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          bio?: string | null
+          cargo?: string
+          created_at?: string
+          email?: string | null
+          foto_url?: string | null
+          github?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          nome?: string
+          ordem?: number
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       editais: {
         Row: {
           categoria: string | null
@@ -182,6 +233,33 @@ export type Database = {
           twitter?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      site_content: {
+        Row: {
+          chave: string
+          conteudo: string | null
+          created_at: string
+          id: string
+          titulo: string | null
+          updated_at: string
+        }
+        Insert: {
+          chave: string
+          conteudo?: string | null
+          created_at?: string
+          id?: string
+          titulo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chave?: string
+          conteudo?: string | null
+          created_at?: string
+          id?: string
+          titulo?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
