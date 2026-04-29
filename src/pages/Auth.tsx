@@ -25,6 +25,19 @@ const forgotSchema = z.object({ email: z.string().email("Email inválido") });
 
 const SUPPORT_EMAIL = "casi@ufac.br";
 
+const errorWithSupport = (msg: string) =>
+  toast.error(msg, {
+    description: (
+      <span className="text-xs">
+        Precisa de ajuda? Fale com o suporte:{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary underline mono">
+          {SUPPORT_EMAIL}
+        </a>
+      </span>
+    ) as any,
+    duration: 7000,
+  });
+
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
