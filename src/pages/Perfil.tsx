@@ -80,7 +80,7 @@ const Perfil = () => {
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdResetLoading, setPwdResetLoading] = useState(false);
 
-  const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initial), [form, initial]);
+  const dirty = useMemo(() => !loading && JSON.stringify(form) !== JSON.stringify(initial), [form, initial, loading]);
 
   // Aviso de saída (refresh / fechar aba)
   useBeforeUnload((e) => {
