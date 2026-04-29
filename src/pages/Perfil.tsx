@@ -265,6 +265,40 @@ const Perfil = () => {
     await loadFactors();
   };
 
+  // ---------- Troca de senha ----------
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.email) return toast.error("Usuário sem email cadastrado");
+    if (pwd.next.length < 8) return toast.error("A nova senha precisa ter ao menos 8 caracteres");
+    if (pwd.next !== pwd.confirm) return toast.error("As senhas não coincidem");
+    if (pwd.current === pwd.next) return toast.error("A nova senha deve ser diferente da atual");
+    setPwdLoading(true);
+    // Reautentica com a senha atual
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: user.email, password: pwd.current,
+    });
+    if (authError) {
+      setPwdLoading(false);
+      return toast.error("Senha atual incorreta");
+    }
+    const { error } = await supabase.auth.updateUser({ password: pwd.next });
+    setPwdLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Senha alterada com sucesso!");
+    setPwd({ current: "", next: "", confirm: "" });
+  };
+
+  const handleResetByEmail = async () => {
+    if (!user?.email) return toast.error("Usuário sem email cadastrado");
+    setPwdResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setPwdResetLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Enviamos um link de redefinição para seu email.");
+  };
+
   if (loading) {
     return <Layout><div className="container py-20 flex items-center justify-center"><Loader2 className="h-8 w-8 text-primary animate-spin" /></div></Layout>;
   }
