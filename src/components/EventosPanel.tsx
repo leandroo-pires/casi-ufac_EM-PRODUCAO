@@ -36,7 +36,7 @@ export const EventosPanel = () => {
           {eventos.map(ev => {
             const future = new Date(ev.data_evento) > new Date();
             return (
-              <article key={ev.id} className="group rounded-lg border border-border bg-background/40 p-3 flex gap-3 hover:border-primary/50 transition-colors">
+              <article key={ev.id} className="esports-card group p-3 flex gap-3">
                 <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-md overflow-hidden bg-muted border border-primary/20">
                   {ev.imagem_url ? <img src={ev.imagem_url} alt={ev.titulo} className="h-full w-full object-cover group-hover:scale-110 transition-transform" /> : <div className="h-full w-full flex items-center justify-center"><ImageIcon className="h-6 w-6 text-primary/50" /></div>}
                 </div>

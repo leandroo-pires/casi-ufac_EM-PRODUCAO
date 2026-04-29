@@ -122,6 +122,16 @@
     background: var(--gradient-card);
   }
 
+  /* Esports card hover - thin glowing turquoise border */
+  .esports-card {
+    @apply relative rounded-lg border border-border bg-background/40 transition-all duration-300;
+  }
+  .esports-card:hover {
+    @apply border-primary;
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.6), 0 0 18px hsl(var(--primary) / 0.45), inset 0 0 12px hsl(var(--primary) / 0.08);
+    transform: translateY(-2px);
+  }
+
   .nav-link {
     @apply relative px-4 py-2 text-sm font-semibold tracking-wider uppercase text-foreground/80 transition-colors hover:text-primary;
     font-family: 'Orbitron', sans-serif;

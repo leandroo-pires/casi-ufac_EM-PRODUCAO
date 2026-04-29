@@ -16,14 +16,24 @@ const links = [
 
 export const Header = () => {
   const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const checkAdmin = async (uid: string | undefined) => {
+      if (!uid) { setIsAdmin(false); return; }
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle();
+      setIsAdmin(!!data);
+    };
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
+      checkAdmin(session?.user?.id);
     });
-    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      checkAdmin(session?.user?.id);
+    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -40,6 +50,11 @@ export const Header = () => {
               {l.label}
             </NavLink>
           ))}
+          {isAdmin && (
+            <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? "active text-primary" : ""}`}>
+              Admin
+            </NavLink>
+          )}
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3 ml-auto">
@@ -101,6 +116,21 @@ export const Header = () => {
                     {l.label}
                   </NavLink>
                 ))}
+                {isAdmin && (
+                  <NavLink
+                    to="/admin"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `font-display uppercase tracking-widest text-sm px-6 py-3 border-l-2 transition-colors ${
+                        isActive
+                          ? "text-primary border-primary bg-primary/10"
+                          : "text-foreground/80 border-transparent hover:text-primary hover:border-primary/50 hover:bg-primary/5"
+                      }`
+                    }
+                  >
+                    Admin
+                  </NavLink>
+                )}
               </nav>
               <div className="px-6 mt-2">
                 <div className="flex items-center gap-2 rounded-lg border border-primary/40 bg-input/60 px-3 py-2 focus-within:shadow-[var(--glow-primary)] transition-shadow">
