@@ -41,6 +41,11 @@ const Admin = () => {
   const { isAdmin, user, loading } = useIsAdmin();
   const navigate = useNavigate();
 
+  // Redireciona para /auth assim que o carregamento termina e não há usuário
+  useEffect(() => {
+    if (!loading && !user) navigate("/auth", { replace: true });
+  }, [loading, user, navigate]);
+
   if (loading) {
     return (
       <Layout>
@@ -49,14 +54,10 @@ const Admin = () => {
     );
   }
   if (!user) {
+    // Em transição de redirecionamento
     return (
       <Layout>
-        <div className="container py-16 max-w-md text-center">
-          <ShieldAlert className="h-12 w-12 text-primary mx-auto mb-3" />
-          <h1 className="font-display text-xl text-silver mb-2">ACESSO RESTRITO</h1>
-          <p className="text-muted-foreground mb-4">É necessário entrar na sua conta.</p>
-          <Button onClick={() => navigate("/auth")} className="bg-primary text-primary-foreground">Entrar</Button>
-        </div>
+        <div className="container py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       </Layout>
     );
   }
