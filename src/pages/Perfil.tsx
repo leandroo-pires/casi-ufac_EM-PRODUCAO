@@ -473,22 +473,6 @@ const Perfil = () => {
         </form>
       </div>
 
-      {/* Aviso de saída para navegação interna */}
-      <AlertDialog open={blocker.state === "blocked"} onOpenChange={(o) => { if (!o && blocker.state === "blocked") blocker.reset?.(); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sair sem salvar?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você tem alterações não salvas no perfil. Deseja descartá-las e sair?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => blocker.reset?.()}>Continuar editando</AlertDialogCancel>
-            <AlertDialogAction onClick={() => blocker.proceed?.()}>Descartar e sair</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </Layout>
   );
 };
 
