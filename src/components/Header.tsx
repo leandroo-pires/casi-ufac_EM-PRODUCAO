@@ -1,8 +1,9 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Search, User, LogIn, LogOut, Menu, X } from "lucide-react";
+import { Search, User, LogIn, LogOut, Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/casi-logo.png";
+import ufacLogo from "@/assets/ufac-logo.png";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -16,32 +17,41 @@ const links = [
 
 export const Header = () => {
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<{ nickname: string | null; display_name: string | null; avatar_url: string | null } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAdmin = async (uid: string | undefined) => {
-      if (!uid) { setIsAdmin(false); return; }
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle();
-      setIsAdmin(!!data);
+    const loadExtras = async (uid: string | undefined) => {
+      if (!uid) { setIsAdmin(false); setProfile(null); return; }
+      const [{ data: role }, { data: prof }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
+        supabase.from("profiles").select("nickname,display_name,avatar_url").eq("user_id", uid).maybeSingle(),
+      ]);
+      setIsAdmin(!!role);
+      setProfile(prof as any);
     };
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
-      checkAdmin(session?.user?.id);
+      loadExtras(session?.user?.id);
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      checkAdmin(session?.user?.id);
+      loadExtras(session?.user?.id);
     });
     return () => subscription.unsubscribe();
   }, []);
 
+  const displayLabel = profile?.nickname || profile?.display_name || user?.email?.split("@")[0] || "";
+
   return (
     <header className="sticky top-0 z-50 border-b border-primary/20 bg-background/80 backdrop-blur-xl">
       <div className="container flex h-16 md:h-20 items-center gap-3 md:gap-6">
-        <Link to="/" className="flex items-center gap-3 shrink-0">
-          <img src={logo} alt="Logo CASI - Centro Acadêmico de Sistemas de Informação" className="h-10 md:h-14 w-auto drop-shadow-[0_0_10px_hsl(var(--primary)/0.6)]" />
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <img src={logo} alt="Logo CASI - Centro Acadêmico de Sistemas de Informação" className="h-9 sm:h-10 md:h-14 w-auto drop-shadow-[0_0_10px_hsl(var(--primary)/0.6)]" />
+          <span className="hidden sm:inline-block h-8 md:h-10 w-px bg-primary/30" aria-hidden />
+          <img src={ufacLogo} alt="Universidade Federal do Acre" className="hidden sm:block h-7 md:h-10 w-auto opacity-90" />
         </Link>
 
         <nav className="hidden lg:flex items-center mx-auto">
@@ -60,11 +70,7 @@ export const Header = () => {
         <div className="flex items-center gap-2 md:gap-3 ml-auto">
           <div className="hidden xl:flex items-center gap-2 rounded-full border border-primary/40 bg-input/60 px-4 py-2 focus-within:shadow-[var(--glow-primary)] transition-shadow">
             <Search className="h-4 w-4 text-primary" />
-            <input
-              type="search"
-              placeholder="Buscar..."
-              className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none w-40"
-            />
+            <input type="search" placeholder="Buscar..." className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none w-40" />
           </div>
 
           {user ? (
@@ -77,10 +83,26 @@ export const Header = () => {
             </Button>
           )}
 
-          <button onClick={() => navigate(user ? "/perfil" : "/auth")} className="relative rounded-full p-0.5 bg-gradient-to-br from-primary to-primary-glow shadow-[var(--glow-primary)] hover:scale-105 transition-transform" aria-label="Perfil">
-            <div className="rounded-full bg-background p-1.5 md:p-2">
-              <User className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-            </div>
+          {/* Avatar + nickname */}
+          <button
+            onClick={() => navigate(user ? "/perfil" : "/auth")}
+            className="flex items-center gap-2 rounded-full pl-1 pr-2 sm:pr-3 py-1 bg-card/60 border border-primary/40 hover:border-primary hover:shadow-[var(--glow-primary)] transition-all max-w-[160px] sm:max-w-[220px]"
+            aria-label="Perfil"
+          >
+            <span className="relative shrink-0 rounded-full p-0.5 bg-gradient-to-br from-primary to-primary-glow">
+              <span className="block rounded-full bg-background overflow-hidden h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-4 w-4 text-primary" />
+                )}
+              </span>
+            </span>
+            {user && displayLabel && (
+              <span className="font-display text-[11px] sm:text-xs uppercase tracking-wider text-silver truncate">
+                {displayLabel}
+              </span>
+            )}
           </button>
 
           {/* Mobile menu */}
@@ -93,10 +115,7 @@ export const Header = () => {
             <SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-l border-primary/30 w-[85vw] sm:max-w-sm p-0">
               <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-primary/20">
                 <img src={logo} alt="" className="h-10 w-auto" />
-                <div>
-                  <p className="mono text-[10px] text-primary tracking-widest">// CASI.UFAC</p>
-                  <p className="font-display text-sm text-silver tracking-widest">MENU</p>
-                </div>
+                <img src={ufacLogo} alt="" className="h-7 w-auto opacity-90" />
               </div>
               <nav className="flex flex-col py-4">
                 {links.map(l => (
