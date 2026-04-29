@@ -304,6 +304,8 @@ const OuvidoriasPanel = () => {
       )}
     </div>
   );
+};
+
 /* ---------- Painel da Diretoria ---------- */
 const DiretoriaPanel = () => {
   const [rows, setRows] = useState<AnyRow[]>([]);
