@@ -320,6 +320,15 @@ const Perfil = () => {
           <aside className="space-y-5 md:sticky md:top-24 self-start">
             <div className="panel-glow p-5 flex flex-col items-center gap-4">
               <div className="relative">
+                {isAdmin && (
+                  <div
+                    className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-gradient-to-br from-gold to-yellow-500 p-1.5 border-2 border-background shadow-[0_0_12px_hsl(45_100%_60%/0.6)]"
+                    title="Administrador"
+                    aria-label="Administrador"
+                  >
+                    <Crown className="h-4 w-4 text-background" fill="currentColor" />
+                  </div>
+                )}
                 <div className="h-32 w-32 rounded-full p-1 bg-gradient-to-br from-primary to-primary-glow shadow-[var(--glow-primary)]">
                   <div className="h-full w-full rounded-full bg-background overflow-hidden flex items-center justify-center">
                     {avatar ? (
