@@ -37,7 +37,7 @@ export const Footer = () => (
             <Instagram className="h-4 w-4" />
           </a>
           <a
-            href="ufac.casi@gmail.com"
+            href="mailto:ufac.casi@gmail.com"
             aria-label="Email CASI"
             className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all"
           >
