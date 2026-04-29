@@ -111,10 +111,10 @@ const CrudPanel = ({ table, categoria, labelOverride }: { table: "editais" | "ev
 
   const load = async () => {
     setLoading(true);
-    let query = supabase.from(table).select("*").order("created_at", { ascending: false });
-    if (table === "editais" && categoria) query = supabase.from(table).select("*").eq("categoria", categoria).order("created_at", { ascending: false });
-    const { data, error } = await query;
-    if (error) toast.error("Erro ao carregar"); else setRows(data ?? []);
+    const base: any = supabase.from(table).select("*");
+    const q = (table === "editais" && categoria) ? base.eq("categoria", categoria) : base;
+    const { data, error } = await q.order("created_at", { ascending: false });
+    if (error) toast.error("Erro ao carregar"); else setRows((data as AnyRow[]) ?? []);
     setLoading(false);
   };
   useEffect(() => { load(); }, [table, categoria]);
@@ -138,12 +138,13 @@ const CrudPanel = ({ table, categoria, labelOverride }: { table: "editais" | "ev
     fields.forEach(f => { if (payload[f.key] === "") payload[f.key] = null; });
     if (!payload.titulo) { toast.error("Título obrigatório"); return; }
     let res;
+    const tbl: any = supabase.from(table);
     if (payload.id) {
       const { id, created_at, updated_at, ...rest } = payload;
-      res = await supabase.from(table).update(rest).eq("id", id);
+      res = await tbl.update(rest).eq("id", id);
     } else {
       const { id, created_at, updated_at, ...rest } = payload;
-      res = await supabase.from(table).insert(rest);
+      res = await tbl.insert(rest);
     }
     if (res.error) toast.error("Erro ao salvar: " + res.error.message);
     else { toast.success("Salvo"); setOpen(false); load(); }
@@ -237,7 +238,7 @@ const OuvidoriasPanel = () => {
   useEffect(() => { load(); }, []);
 
   const update = async (id: string, patch: AnyRow) => {
-    const { error } = await supabase.from("ouvidorias").update(patch).eq("id", id);
+    const { error } = await (supabase.from("ouvidorias") as any).update(patch).eq("id", id);
     if (error) toast.error("Erro: " + error.message); else { toast.success("Atualizado"); load(); }
   };
   const del = async (id: string) => {
