@@ -18,17 +18,29 @@ export const Footer = () => (
       <div>
         <h4 className="font-display text-sm uppercase text-silver mb-4 tracking-widest">Contato</h4>
         <ul className="space-y-2 text-sm text-foreground/80">
-          <li className="flex items-start gap-2"><MapPin className="h-4 w-4 text-primary mt-0.5" /> Centro de Ciências Exatas e Tecnológicas — UFAC, Rio Branco/AC</li>
-          <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary" /> casi@ufac.br</li>
+          <li className="flex items-start gap-2">
+            <MapPin className="h-4 w-4 text-primary mt-0.5" /> Bloco K2 (Segundo andar) — UFAC, Campus Rio Branco/AC
+          </li>
+          <li className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-primary" /> ufac.casi@gmail.com
+          </li>
         </ul>
       </div>
       <div>
         <h4 className="font-display text-sm uppercase text-silver mb-4 tracking-widest">Redes</h4>
         <div className="flex gap-3 flex-wrap">
-          <a href="#" aria-label="Instagram" className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all">
+          <a
+            href="#"
+            aria-label="Instagram"
+            className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all"
+          >
             <Instagram className="h-4 w-4" />
           </a>
-          <a href="mailto:casi@ufac.br" aria-label="Email CASI" className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all">
+          <a
+            href="mailto:casi@ufac.br"
+            aria-label="Email CASI"
+            className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all"
+          >
             <Mail className="h-4 w-4" />
           </a>
           <a
