@@ -1,4 +1,4 @@
-import { Instagram, Github, Mail, MapPin, Twitch } from "lucide-react";
+import { Instagram, Mail, MapPin, ExternalLink } from "lucide-react";
 import logo from "@/assets/casi-logo.png";
 import ufacLogo from "@/assets/ufac-logo.png";
 
@@ -24,12 +24,23 @@ export const Footer = () => (
       </div>
       <div>
         <h4 className="font-display text-sm uppercase text-silver mb-4 tracking-widest">Redes</h4>
-        <div className="flex gap-3">
-          {[Instagram, Github, Twitch, Mail].map((Icon, i) => (
-            <a key={i} href="#" className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all">
-              <Icon className="h-4 w-4" />
-            </a>
-          ))}
+        <div className="flex gap-3 flex-wrap">
+          <a href="#" aria-label="Instagram" className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all">
+            <Instagram className="h-4 w-4" />
+          </a>
+          <a href="mailto:casi@ufac.br" aria-label="Email CASI" className="rounded-lg border border-primary/40 p-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all">
+            <Mail className="h-4 w-4" />
+          </a>
+          <a
+            href="https://www.ufac.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Site oficial da UFAC"
+            title="Site oficial da UFAC"
+            className="rounded-lg border border-primary/40 px-3 py-2.5 text-primary hover:bg-primary/10 hover:shadow-[var(--glow-primary)] transition-all flex items-center gap-1.5 mono text-[11px] uppercase tracking-widest"
+          >
+            <ExternalLink className="h-4 w-4" /> UFAC
+          </a>
         </div>
       </div>
     </div>
