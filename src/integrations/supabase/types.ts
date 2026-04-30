@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendario_academico: {
+        Row: {
+          ano: number
+          ativo: boolean
+          created_at: string
+          id: string
+          pdf_url: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          pdf_url: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          pdf_url?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       diretoria: {
         Row: {
           ativo: boolean
@@ -62,6 +92,42 @@ export type Database = {
           ordem?: number
           updated_at?: string
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      documentos_academicos: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          descricao: string | null
+          id: string
+          ordem: number
+          pdf_url: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          pdf_url: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          pdf_url?: string
+          titulo?: string
+          updated_at?: string
         }
         Relationships: []
       }

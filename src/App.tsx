@@ -12,6 +12,8 @@ import Editais from "./pages/Editais";
 import Eventos from "./pages/Eventos";
 import Academico from "./pages/Academico";
 import MatrizCurricular from "./pages/MatrizCurricular";
+import CalendarioAcademico from "./pages/CalendarioAcademico";
+import Documentos from "./pages/Documentos";
 import Ouvidoria from "./pages/Ouvidoria";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +33,8 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/academico" element={<Academico />} />
           <Route path="/academico/matriz" element={<MatrizCurricular />} />
+          <Route path="/academico/calendario" element={<CalendarioAcademico />} />
+          <Route path="/academico/documentos" element={<Documentos />} />
           <Route path="/ouvidoria" element={<Ouvidoria />} />
           <Route path="/eventos" element={<Eventos />} />
           <Route path="/editais" element={<Editais />} />

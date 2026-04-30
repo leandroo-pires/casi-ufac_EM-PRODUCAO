@@ -6,6 +6,7 @@ import logo from "@/assets/casi-logo.png";
 import ufacLogo from "@/assets/ufac-logo.png";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 const links = [
   { to: "/", label: "Início" },
@@ -66,10 +67,7 @@ export const Header = () => {
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3 ml-auto">
-          <div className="hidden xl:flex items-center gap-2 rounded-full border border-primary/40 bg-input/60 px-4 py-2 focus-within:shadow-[var(--glow-primary)] transition-shadow">
-            <Search className="h-4 w-4 text-primary" />
-            <input type="search" placeholder="Buscar..." className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none w-40" />
-          </div>
+          <GlobalSearch />
 
           {user ? (
             <Button variant="ghost" size="icon" onClick={() => supabase.auth.signOut()} title="Sair" className="rounded-full border border-primary/50 hover:bg-primary/10 h-9 w-9">
@@ -159,10 +157,7 @@ export const Header = () => {
                 )}
               </nav>
               <div className="px-6 mt-2">
-                <div className="flex items-center gap-2 rounded-lg border border-primary/40 bg-input/60 px-3 py-2 focus-within:shadow-[var(--glow-primary)] transition-shadow">
-                  <Search className="h-4 w-4 text-primary" />
-                  <input type="search" placeholder="Buscar..." className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none flex-1" />
-                </div>
+                <p className="mono text-[10px] text-muted-foreground mb-2">// dica: pressione Ctrl/⌘ + K para buscar</p>
                 {!user && (
                   <Button onClick={() => { setOpen(false); navigate("/auth"); }} className="w-full mt-4 bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-display uppercase tracking-widest">
                     <LogIn className="h-4 w-4 mr-2" /> Entrar

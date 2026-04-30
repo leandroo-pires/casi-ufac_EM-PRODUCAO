@@ -15,6 +15,9 @@ import {
 import "@xyflow/react/dist/style.css";
 import { disciplinas, atividadesComplementares, type Disciplina } from "@/lib/matrizCurricular";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // ============ Layout constants ============
 const COL_WIDTH = 260;
@@ -29,7 +32,7 @@ type DiscData = {
   nome: string;
   ch: string;
   isAtividade?: boolean;
-  highlight: "none" | "active" | "related" | "dimmed";
+  highlight: "none" | "active" | "related" | "dimmed" | "match";
 };
 
 const DisciplinaNode = ({ data }: NodeProps) => {
@@ -41,14 +44,14 @@ const DisciplinaNode = ({ data }: NodeProps) => {
       className={cn(
         "relative w-[230px] rounded-lg border bg-card/80 backdrop-blur-sm px-3 py-2.5 transition-all duration-200",
         "shadow-sm",
-        isAtividade
-          ? "border-gold/40 bg-gold/5"
-          : "border-border/70",
+        isAtividade ? "border-gold/40 bg-gold/5" : "border-border/70",
         highlight === "active" &&
           "border-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.7),0_0_22px_hsl(var(--primary)/0.55)] scale-[1.03]",
         highlight === "related" &&
           "border-primary/80 shadow-[0_0_0_1px_hsl(var(--primary)/0.5),0_0_14px_hsl(var(--primary)/0.35)]",
-        highlight === "dimmed" && "opacity-30",
+        highlight === "match" &&
+          "border-gold shadow-[0_0_0_1px_hsl(45_100%_60%/0.7),0_0_22px_hsl(45_100%_60%/0.55)] scale-[1.03]",
+        highlight === "dimmed" && "opacity-25",
       )}
     >
       <Handle type="target" position={Position.Left} className="!bg-primary !border-primary !w-2 !h-2" />
@@ -72,12 +75,18 @@ const DisciplinaNode = ({ data }: NodeProps) => {
 
 const nodeTypes = { disc: DisciplinaNode };
 
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
 // ============ Component ============
 const MatrizFlowInner = () => {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
-  // Build relationship maps
-  const { prereqMap, successorMap, allItems } = useMemo(() => {
+  const { prereqMap, successorMap } = useMemo(() => {
     const all = [...disciplinas, ...atividadesComplementares];
     const prereqMap = new Map<string, Set<string>>();
     const successorMap = new Map<string, Set<string>>();
@@ -91,10 +100,9 @@ const MatrizFlowInner = () => {
         successorMap.get(p)!.add(d.id);
       }
     }
-    return { prereqMap, successorMap, allItems: all };
+    return { prereqMap, successorMap };
   }, []);
 
-  // Compute related ids when hovered
   const relatedIds = useMemo(() => {
     if (!hovered) return new Set<string>();
     const set = new Set<string>([hovered]);
@@ -103,16 +111,27 @@ const MatrizFlowInner = () => {
     return set;
   }, [hovered, prereqMap, successorMap]);
 
-  // Build positions per column
+  // Search matches: disciplinas cujos nome/codigo contêm o termo
+  const matchIds = useMemo(() => {
+    const term = norm(search.trim());
+    if (term.length < 2) return new Set<string>();
+    const all = [...disciplinas, ...atividadesComplementares];
+    return new Set(
+      all
+        .filter((d) => norm(d.nome).includes(term) || norm(d.codigo).includes(term))
+        .map((d) => d.id),
+    );
+  }, [search]);
+
+  const hasSearch = matchIds.size > 0 || search.trim().length >= 2;
+
   const { nodes, edges } = useMemo(() => {
-    // group by periodo
     const byPeriodo: Record<number, Disciplina[]> = {};
     for (let p = 1; p <= 8; p++) byPeriodo[p] = [];
     for (const d of disciplinas) byPeriodo[d.periodo].push(d);
 
     const nodes: Node[] = [];
 
-    // Header nodes (period titles) — non-interactive labels
     for (let p = 1; p <= 8; p++) {
       nodes.push({
         id: `header-${p}`,
@@ -136,17 +155,23 @@ const MatrizFlowInner = () => {
       });
     }
 
-    // Disciplina nodes
+    const computeHl = (id: string): DiscData["highlight"] => {
+      // Hover tem prioridade quando ativo
+      if (hovered) {
+        if (id === hovered) return "active";
+        if (relatedIds.has(id)) return "related";
+        return "dimmed";
+      }
+      if (hasSearch) {
+        if (matchIds.has(id)) return "match";
+        return "dimmed";
+      }
+      return "none";
+    };
+
     for (let p = 1; p <= 8; p++) {
       const list = byPeriodo[p];
       list.forEach((d, idx) => {
-        const hl: DiscData["highlight"] = !hovered
-          ? "none"
-          : d.id === hovered
-            ? "active"
-            : relatedIds.has(d.id)
-              ? "related"
-              : "dimmed";
         nodes.push({
           id: d.id,
           type: "disc",
@@ -154,12 +179,11 @@ const MatrizFlowInner = () => {
             x: PADDING_X + (p - 1) * (COL_WIDTH + COL_GAP),
             y: HEADER_OFFSET + idx * ROW_HEIGHT,
           },
-          data: { codigo: d.codigo, nome: d.nome, ch: d.ch, highlight: hl },
+          data: { codigo: d.codigo, nome: d.nome, ch: d.ch, highlight: computeHl(d.id) },
         });
       });
     }
 
-    // Atividades complementares — at bottom of each column
     const maxRows = Math.max(...Object.values(byPeriodo).map((l) => l.length));
     for (const ac of atividadesComplementares) {
       nodes.push({
@@ -169,17 +193,21 @@ const MatrizFlowInner = () => {
           x: PADDING_X + (ac.periodo - 1) * (COL_WIDTH + COL_GAP),
           y: HEADER_OFFSET + (maxRows + 0.5) * ROW_HEIGHT,
         },
-        data: { codigo: ac.codigo, nome: ac.nome, ch: ac.ch, isAtividade: true, highlight: "none" },
+        data: {
+          codigo: ac.codigo,
+          nome: ac.nome,
+          ch: ac.ch,
+          isAtividade: true,
+          highlight: computeHl(ac.id),
+        },
       });
     }
 
-    // Edges from prereqs
     const edges: Edge[] = [];
     for (const d of disciplinas) {
       for (const pre of d.prereqs) {
-        const isActive =
-          hovered && (d.id === hovered || pre === hovered);
-        const isDimmed = hovered && !isActive;
+        const isActive = hovered && (d.id === hovered || pre === hovered);
+        const isDimmed = (hovered && !isActive) || (hasSearch && !hovered);
         edges.push({
           id: `${pre}->${d.id}`,
           source: pre,
@@ -198,66 +226,89 @@ const MatrizFlowInner = () => {
     }
 
     return { nodes, edges };
-  }, [hovered, relatedIds]);
+  }, [hovered, relatedIds, matchIds, hasSearch]);
 
   const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
     if (node.type === "disc") setHovered(node.id);
   }, []);
   const onNodeMouseLeave = useCallback(() => setHovered(null), []);
 
-  // Compute canvas height to give bottom space
-  const totalHeight =
-    HEADER_OFFSET +
-    (Math.max(...Array.from({ length: 8 }, (_, i) => disciplinas.filter((d) => d.periodo === i + 1).length)) +
-      2) *
-      ROW_HEIGHT;
-
   return (
-    <div
-      className="w-full rounded-xl border border-primary/20 overflow-hidden"
-      style={{
-        height: "min(80vh, 820px)",
-        background:
-          "radial-gradient(ellipse at top, hsl(205 65% 8%) 0%, hsl(205 70% 4%) 70%)",
-      }}
-    >
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        onNodeMouseEnter={onNodeMouseEnter}
-        onNodeMouseLeave={onNodeMouseLeave}
-        fitView
-        fitViewOptions={{ padding: 0.15, minZoom: 0.3, maxZoom: 1.2 }}
-        minZoom={0.25}
-        maxZoom={1.5}
-        proOptions={{ hideAttribution: true }}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-        panOnDrag
-        panOnScroll
+    <div className="space-y-3">
+      {/* Busca LOCAL da matriz */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filtrar disciplina (ex: Lógica, Banco, CCET...)"
+            className="bg-input/60 border-primary/40 pl-9 pr-9 focus-visible:ring-primary"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-primary/10"
+              aria-label="Limpar busca"
+            >
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+        {hasSearch && (
+          <p className="mono text-xs text-primary">
+            // {matchIds.size} disciplina{matchIds.size === 1 ? "" : "s"} encontrada
+            {matchIds.size === 1 ? "" : "s"}
+          </p>
+        )}
+      </div>
+
+      <div
+        className="w-full rounded-xl border border-primary/20 overflow-hidden"
+        style={{
+          height: "min(80vh, 820px)",
+          background:
+            "radial-gradient(ellipse at top, hsl(205 65% 8%) 0%, hsl(205 70% 4%) 70%)",
+        }}
       >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={24}
-          size={1}
-          color="hsl(var(--primary) / 0.15)"
-        />
-        <Controls
-          showInteractive={false}
-          className="!bg-card/80 !border-border [&>button]:!bg-card/80 [&>button]:!border-border [&>button]:!text-foreground hover:[&>button]:!bg-primary/20"
-        />
-        <MiniMap
-          pannable
-          zoomable
-          className="!bg-card/80 !border !border-border"
-          maskColor="hsl(205 60% 6% / 0.7)"
-          nodeColor={(n) =>
-            (n.data as DiscData)?.isAtividade ? "hsl(45 95% 60%)" : "hsl(186 95% 55%)"
-          }
-        />
-      </ReactFlow>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodeMouseEnter={onNodeMouseEnter}
+          onNodeMouseLeave={onNodeMouseLeave}
+          fitView
+          fitViewOptions={{ padding: 0.15, minZoom: 0.3, maxZoom: 1.2 }}
+          minZoom={0.25}
+          maxZoom={1.5}
+          proOptions={{ hideAttribution: true }}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          panOnDrag
+          panOnScroll
+        >
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={24}
+            size={1}
+            color="hsl(var(--primary) / 0.15)"
+          />
+          <Controls
+            showInteractive={false}
+            className="!bg-card/80 !border-border [&>button]:!bg-card/80 [&>button]:!border-border [&>button]:!text-foreground hover:[&>button]:!bg-primary/20"
+          />
+          <MiniMap
+            pannable
+            zoomable
+            className="!bg-card/80 !border !border-border"
+            maskColor="hsl(205 60% 6% / 0.7)"
+            nodeColor={(n) =>
+              (n.data as DiscData)?.isAtividade ? "hsl(45 95% 60%)" : "hsl(186 95% 55%)"
+            }
+          />
+        </ReactFlow>
+      </div>
     </div>
   );
 };
