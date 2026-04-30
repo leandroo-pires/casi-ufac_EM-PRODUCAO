@@ -493,4 +493,278 @@ const ConteudoPanel = () => {
   );
 };
 
+/* ---------- Painel de Calendário Acadêmico ---------- */
+const CalendarioPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AnyRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("calendario_academico" as any).select("*") as any).order("ano", { ascending: false });
+    if (error) toast.error("Erro ao carregar"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openNew = () => {
+    setEditing({ ano: new Date().getFullYear(), titulo: "", pdf_url: "", ativo: true });
+    setOpen(true);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!editing) return;
+    if (file.type !== "application/pdf") { toast.error("Envie um arquivo PDF"); return; }
+    setUploading(true);
+    const path = `calendario/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+    const { error: upErr } = await supabase.storage.from("documentos").upload(path, file, { upsert: false, contentType: "application/pdf" });
+    if (upErr) { toast.error("Falha no upload: " + upErr.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("documentos").getPublicUrl(path);
+    setEditing({ ...editing, pdf_url: data.publicUrl });
+    setUploading(false);
+    toast.success("PDF enviado");
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.titulo || !editing.pdf_url || !editing.ano) { toast.error("Preencha ano, título e PDF"); return; }
+    const { id, created_at, updated_at, ...rest } = editing;
+    rest.ano = Number(rest.ano);
+    const tbl: any = supabase.from("calendario_academico" as any);
+    const res = id ? await tbl.update(rest).eq("id", id) : await tbl.insert(rest);
+    if (res.error) toast.error("Erro: " + res.error.message);
+    else { toast.success("Salvo"); setOpen(false); load(); }
+  };
+
+  const setAtivo = async (id: string, ativo: boolean) => {
+    const { error } = await (supabase.from("calendario_academico" as any) as any).update({ ativo }).eq("id", id);
+    if (error) toast.error("Erro: " + error.message); else { toast.success(ativo ? "Calendário definido como ativo" : "Calendário desativado"); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Excluir este calendário?")) return;
+    const { error } = await (supabase.from("calendario_academico" as any) as any).delete().eq("id", id);
+    if (error) toast.error("Erro"); else { toast.success("Excluído"); load(); }
+  };
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">CALENDÁRIO ACADÊMICO</h2>
+        <Button onClick={openNew} size="sm" className="bg-primary text-primary-foreground"><Plus className="h-4 w-4 mr-1" /> Novo</Button>
+      </div>
+
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground mono text-sm py-8">// nenhum calendário cadastrado</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map(c => (
+            <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-primary/20 bg-background/40 p-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-display text-silver">{c.titulo}</span>
+                  <span className="mono text-xs text-primary">// ano {c.ano}</span>
+                  {c.ativo && <span className="text-[10px] mono uppercase tracking-widest px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/40">ativo</span>}
+                </div>
+                <a href={c.pdf_url} target="_blank" rel="noopener" className="text-xs text-muted-foreground hover:text-primary truncate block max-w-[60vw]">{c.pdf_url}</a>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-xs">
+                  <Switch checked={!!c.ativo} onCheckedChange={(v) => setAtivo(c.id, v)} />
+                  Ativo
+                </label>
+                <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setOpen(true); }} className="h-8 w-8 text-primary"><Pencil className="h-4 w-4" /></Button>
+                <Button size="icon" variant="ghost" onClick={() => del(c.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card border-primary/40 max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display tracking-widest">{editing?.id ? "EDITAR CALENDÁRIO" : "NOVO CALENDÁRIO"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ano</Label>
+                <Input type="number" value={editing.ano ?? ""} onChange={e => setEditing({ ...editing, ano: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Título</Label>
+                <Input value={editing.titulo ?? ""} onChange={e => setEditing({ ...editing, titulo: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">PDF do calendário</Label>
+                <Input type="file" accept="application/pdf" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])} disabled={uploading} className="bg-input/60 border-primary/30 mt-1 text-xs" />
+                {editing.pdf_url && <a href={editing.pdf_url} target="_blank" rel="noopener" className="text-xs text-primary mono mt-1 inline-block truncate max-w-full">{editing.pdf_url}</a>}
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ou cole a URL do PDF</Label>
+                <Input value={editing.pdf_url ?? ""} onChange={e => setEditing({ ...editing, pdf_url: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <label className="flex items-center gap-2 text-xs">
+                <Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} />
+                Definir como calendário vigente (ativo)
+              </label>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={uploading} className="bg-primary text-primary-foreground">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/* ---------- Painel de Documentos & Modelos ---------- */
+const CATEGORIAS_DOC = [
+  { value: "requerimentos", label: "Requerimentos" },
+  { value: "modelos_tcc", label: "Modelos de TCC" },
+  { value: "horas_complementares", label: "Horas Complementares" },
+  { value: "estagio", label: "Estágio" },
+];
+
+const DocumentosPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AnyRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("documentos_academicos" as any).select("*") as any)
+      .order("categoria", { ascending: true })
+      .order("ordem", { ascending: true });
+    if (error) toast.error("Erro ao carregar"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openNew = () => {
+    setEditing({ titulo: "", descricao: "", categoria: "requerimentos", pdf_url: "", ordem: 0, ativo: true });
+    setOpen(true);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!editing) return;
+    if (file.type !== "application/pdf") { toast.error("Envie um arquivo PDF"); return; }
+    setUploading(true);
+    const path = `documentos/${editing.categoria || "outros"}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+    const { error: upErr } = await supabase.storage.from("documentos").upload(path, file, { upsert: false, contentType: "application/pdf" });
+    if (upErr) { toast.error("Falha no upload: " + upErr.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("documentos").getPublicUrl(path);
+    setEditing({ ...editing, pdf_url: data.publicUrl });
+    setUploading(false);
+    toast.success("PDF enviado");
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.titulo || !editing.pdf_url || !editing.categoria) {
+      toast.error("Preencha título, categoria e PDF"); return;
+    }
+    const { id, created_at, updated_at, ...rest } = editing;
+    rest.ordem = Number(rest.ordem) || 0;
+    const tbl: any = supabase.from("documentos_academicos" as any);
+    const res = id ? await tbl.update(rest).eq("id", id) : await tbl.insert(rest);
+    if (res.error) toast.error("Erro: " + res.error.message);
+    else { toast.success("Salvo"); setOpen(false); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Excluir este documento?")) return;
+    const { error } = await (supabase.from("documentos_academicos" as any) as any).delete().eq("id", id);
+    if (error) toast.error("Erro"); else { toast.success("Excluído"); load(); }
+  };
+
+  const labelCat = (k: string) => CATEGORIAS_DOC.find(c => c.value === k)?.label ?? k;
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">DOCUMENTOS &amp; MODELOS</h2>
+        <Button onClick={openNew} size="sm" className="bg-primary text-primary-foreground"><Plus className="h-4 w-4 mr-1" /> Novo</Button>
+      </div>
+
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground mono text-sm py-8">// nenhum documento cadastrado</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map(d => (
+            <li key={d.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-primary/20 bg-background/40 p-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-display text-silver truncate">{d.titulo}</span>
+                  <span className="text-[10px] mono uppercase tracking-widest px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/30">{labelCat(d.categoria)}</span>
+                  {!d.ativo && <span className="text-[10px] mono text-amber-400">inativo</span>}
+                </div>
+                <a href={d.pdf_url} target="_blank" rel="noopener" className="text-xs text-muted-foreground hover:text-primary truncate block max-w-[60vw]">{d.pdf_url}</a>
+              </div>
+              <Button size="icon" variant="ghost" onClick={() => { setEditing(d); setOpen(true); }} className="h-8 w-8 text-primary"><Pencil className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => del(d.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card border-primary/40 max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display tracking-widest">{editing?.id ? "EDITAR DOCUMENTO" : "NOVO DOCUMENTO"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Título</Label>
+                <Input value={editing.titulo ?? ""} onChange={e => setEditing({ ...editing, titulo: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Descrição</Label>
+                <Textarea value={editing.descricao ?? ""} onChange={e => setEditing({ ...editing, descricao: e.target.value })} rows={3} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Categoria</Label>
+                <select
+                  value={editing.categoria ?? "requerimentos"}
+                  onChange={e => setEditing({ ...editing, categoria: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-primary/30 bg-input/60 px-3 py-2 text-sm text-foreground"
+                >
+                  {CATEGORIAS_DOC.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">PDF</Label>
+                <Input type="file" accept="application/pdf" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])} disabled={uploading} className="bg-input/60 border-primary/30 mt-1 text-xs" />
+                {editing.pdf_url && <a href={editing.pdf_url} target="_blank" rel="noopener" className="text-xs text-primary mono mt-1 inline-block truncate max-w-full">{editing.pdf_url}</a>}
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ou cole a URL do PDF</Label>
+                <Input value={editing.pdf_url ?? ""} onChange={e => setEditing({ ...editing, pdf_url: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ordem</Label>
+                  <Input type="number" value={editing.ordem ?? 0} onChange={e => setEditing({ ...editing, ordem: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+                </div>
+                <div className="flex flex-col justify-end pb-1">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Ativo</Label>
+                  <Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={uploading} className="bg-primary text-primary-foreground">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 export default Admin;
