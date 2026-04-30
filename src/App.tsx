@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import Editais from "./pages/Editais";
 import Eventos from "./pages/Eventos";
 import Academico from "./pages/Academico";
+import MatrizCurricular from "./pages/MatrizCurricular";
 import Ouvidoria from "./pages/Ouvidoria";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/academico" element={<Academico />} />
+          <Route path="/academico/matriz" element={<MatrizCurricular />} />
           <Route path="/ouvidoria" element={<Ouvidoria />} />
           <Route path="/eventos" element={<Eventos />} />
           <Route path="/editais" element={<Editais />} />
