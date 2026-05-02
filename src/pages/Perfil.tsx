@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { z } from "zod";
+import { QRCodeSVG } from "qrcode.react";
 import {
   User as UserIcon, Camera, Save, LogOut, Instagram, Github, Linkedin, Twitter,
   GraduationCap, Calendar, AtSign, Loader2, Trash2, ShieldCheck, Shield, ShieldAlert,
