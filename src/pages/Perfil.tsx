@@ -499,7 +499,9 @@ const Perfil = () => {
               {enroll && (
                 <div className="space-y-3">
                   <p className="text-sm">Escaneie o QR no seu app (Google Authenticator, Authy):</p>
-                  <img alt="QR 2FA" src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(enroll.uri)}`} className="rounded-md border border-primary/30 p-2 bg-background" />
+                  <div className="rounded-md border border-primary/30 p-2 bg-white w-fit">
+                    <QRCodeSVG value={enroll.uri} size={200} level="M" />
+                  </div>
                   <p className="mono text-[10px] text-muted-foreground break-all">Ou digite manualmente: <span className="text-primary">{enroll.secret}</span></p>
                   <div className="flex gap-2">
                     <Input value={enrollCode} onChange={e => setEnrollCode(e.target.value)} placeholder="Código de 6 dígitos" maxLength={6}
