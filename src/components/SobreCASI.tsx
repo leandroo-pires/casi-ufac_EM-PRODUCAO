@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Code2, Users, Zap, Instagram, Github, Linkedin, Mail, MessageCircle } from "lucide-react";
+import { Code2, Instagram, Github, Linkedin, Mail, MessageCircle, FileText, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 type Membro = {
   id: string;
