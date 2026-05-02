@@ -409,6 +409,33 @@ export type Database = {
       }
     }
     Views: {
+      ouvidorias_public: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          id: string | null
+          mensagem: string | null
+          resposta_publica: string | null
+          status: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          id?: string | null
+          mensagem?: string | null
+          resposta_publica?: string | null
+          status?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          id?: string | null
+          mensagem?: string | null
+          resposta_publica?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       profiles_public: {
         Row: {
           avatar_url: string | null
