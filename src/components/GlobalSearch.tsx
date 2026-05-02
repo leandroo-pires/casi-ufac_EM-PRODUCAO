@@ -117,7 +117,7 @@ export const GlobalSearch = () => {
         <Search className="h-4 w-4 text-primary" />
       </Button>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
         <div className="bg-background border border-primary/30 rounded-md overflow-hidden">
           <CommandInput
             placeholder="Buscar editais, avisos e eventos..."
