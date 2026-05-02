@@ -15,6 +15,7 @@ import MatrizCurricular from "./pages/MatrizCurricular";
 import CalendarioAcademico from "./pages/CalendarioAcademico";
 import Documentos from "./pages/Documentos";
 import Ouvidoria from "./pages/Ouvidoria";
+import Comunidade from "./pages/Comunidade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/academico/calendario" element={<CalendarioAcademico />} />
           <Route path="/academico/documentos" element={<Documentos />} />
           <Route path="/ouvidoria" element={<Ouvidoria />} />
+          <Route path="/comunidade" element={<Comunidade />} />
           <Route path="/eventos" element={<Eventos />} />
           <Route path="/editais" element={<Editais />} />
           <Route path="*" element={<NotFound />} />

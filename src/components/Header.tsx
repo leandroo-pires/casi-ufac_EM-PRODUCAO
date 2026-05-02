@@ -11,6 +11,7 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 const links = [
   { to: "/", label: "Início" },
   { to: "/academico", label: "Acadêmico" },
+  { to: "/comunidade", label: "Comunidade" },
   { to: "/ouvidoria", label: "Ouvidoria" },
   { to: "/eventos", label: "Eventos" },
   { to: "/editais", label: "Editais/Avisos" },
