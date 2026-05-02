@@ -26,9 +26,9 @@ export const OuvidoriaPanel = () => {
   const [recent, setRecent] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("ouvidorias").select("id, categoria, resposta_publica, created_at, status")
-      .eq("is_public", true).order("created_at", { ascending: false }).limit(4)
-      .then(({ data }) => setRecent(data ?? []));
+    (supabase as any).from("ouvidorias_public").select("id, categoria, resposta_publica, created_at, status")
+      .order("created_at", { ascending: false }).limit(4)
+      .then(({ data }: any) => setRecent(data ?? []));
   }, []);
 
   const submit = async (e: React.FormEvent) => {
