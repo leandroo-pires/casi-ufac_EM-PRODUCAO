@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Code2, Users, Zap, Instagram, Github, Linkedin, Mail, MessageCircle } from "lucide-react";
+import { Code2, Instagram, Github, Linkedin, Mail, MessageCircle, FileText, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 type Membro = {
   id: string;
@@ -21,17 +22,23 @@ export const SobreCASI = () => {
     titulo: "Sobre o CASI",
     conteudo: null,
   });
+  const [estatuto, setEstatuto] = useState<{ titulo: string | null; conteudo: string | null } | null>(null);
 
   useEffect(() => {
     (async () => {
-      const [{ data: dir }, { data: sc }] = await Promise.all([
+      const [{ data: dir }, { data: sc }, { data: est }] = await Promise.all([
         supabase.from("diretoria" as any).select("*").eq("ativo", true).order("ordem", { ascending: true }),
         supabase.from("site_content" as any).select("titulo,conteudo").eq("chave", "sobre_casi").maybeSingle(),
+        supabase.from("site_content" as any).select("titulo,conteudo").eq("chave", "estatuto").maybeSingle(),
       ]);
       setMembros((dir as any) ?? []);
       if (sc) setSobre(sc as any);
+      if (est) setEstatuto(est as any);
     })();
   }, []);
+
+  const estatutoConteudo = (estatuto?.conteudo ?? "").trim();
+  const estatutoIsLink = /^https?:\/\//i.test(estatutoConteudo);
 
   return (
     <section className="panel-glow p-4 sm:p-6 animate-fade-up">
@@ -50,18 +57,31 @@ export const SobreCASI = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5 sm:mt-6">
-        {[
-          { icon: Users, label: "ALUNOS", value: "+200" },
-          { icon: Zap, label: "EVENTOS/ANO", value: "12" },
-          { icon: Code2, label: "PROJETOS DEV", value: "8" },
-        ].map(({ icon: Icon, label, value }) => (
-          <div key={label} className="rounded-lg border border-primary/30 bg-background/40 p-3 text-center">
-            <Icon className="h-4 w-4 text-primary mx-auto mb-1" />
-            <div className="font-display text-xl text-silver">{value}</div>
-            <div className="mono text-[10px] text-muted-foreground tracking-widest">{label}</div>
+      <div className="mt-5 sm:mt-6 rounded-lg border border-primary/30 bg-background/40 p-4">
+        <div className="flex items-start gap-3">
+          <div className="rounded-md bg-primary/15 p-2 border border-primary/30 shrink-0">
+            <FileText className="h-4 w-4 text-primary" />
           </div>
-        ))}
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-sm text-silver tracking-widest uppercase">
+              {estatuto?.titulo || "Estatuto Oficial"}
+            </h3>
+            {!estatutoConteudo ? (
+              <p className="mono text-xs text-muted-foreground mt-1">// estatuto ainda não publicado</p>
+            ) : estatutoIsLink ? (
+              <>
+                <p className="text-xs text-foreground/70 mt-1">Documento oficial da entidade.</p>
+                <Button asChild size="sm" variant="outline" className="mt-3 border-primary/50 text-primary hover:bg-primary/10">
+                  <a href={estatutoConteudo} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Acessar Estatuto
+                  </a>
+                </Button>
+              </>
+            ) : (
+              <p className="text-xs text-foreground/80 mt-1 whitespace-pre-wrap">{estatutoConteudo}</p>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="mt-6">

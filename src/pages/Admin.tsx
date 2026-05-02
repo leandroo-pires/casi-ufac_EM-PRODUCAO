@@ -85,13 +85,14 @@ const Admin = () => {
         </header>
 
         <Tabs defaultValue="editais" className="w-full">
-          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1 h-auto p-1 mb-4">
+          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1 h-auto p-1 mb-4">
             <TabsTrigger value="editais" className="font-display text-xs uppercase tracking-widest">Editais</TabsTrigger>
             <TabsTrigger value="eventos" className="font-display text-xs uppercase tracking-widest">Eventos</TabsTrigger>
             <TabsTrigger value="avisos" className="font-display text-xs uppercase tracking-widest">Avisos</TabsTrigger>
             <TabsTrigger value="ouvidorias" className="font-display text-xs uppercase tracking-widest">Ouvidorias</TabsTrigger>
             <TabsTrigger value="diretoria" className="font-display text-xs uppercase tracking-widest">Diretoria</TabsTrigger>
             <TabsTrigger value="conteudo" className="font-display text-xs uppercase tracking-widest">Conteúdo</TabsTrigger>
+            <TabsTrigger value="midia" className="font-display text-xs uppercase tracking-widest">Vitrine</TabsTrigger>
             <TabsTrigger value="calendario" className="font-display text-xs uppercase tracking-widest">Calendário</TabsTrigger>
             <TabsTrigger value="documentos" className="font-display text-xs uppercase tracking-widest">Documentos</TabsTrigger>
           </TabsList>
@@ -102,6 +103,7 @@ const Admin = () => {
           <TabsContent value="ouvidorias"><OuvidoriasPanel /></TabsContent>
           <TabsContent value="diretoria"><DiretoriaPanel /></TabsContent>
           <TabsContent value="conteudo"><ConteudoPanel /></TabsContent>
+          <TabsContent value="midia"><MidiaPanel /></TabsContent>
           <TabsContent value="calendario"><CalendarioPanel /></TabsContent>
           <TabsContent value="documentos"><DocumentosPanel /></TabsContent>
         </Tabs>
@@ -744,6 +746,141 @@ const DocumentosPanel = () => {
               <div>
                 <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ou cole a URL do PDF</Label>
                 <Input value={editing.pdf_url ?? ""} onChange={e => setEditing({ ...editing, pdf_url: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ordem</Label>
+                  <Input type="number" value={editing.ordem ?? 0} onChange={e => setEditing({ ...editing, ordem: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+                </div>
+                <div className="flex flex-col justify-end pb-1">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Ativo</Label>
+                  <Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={uploading} className="bg-primary text-primary-foreground">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/* ---------- Painel de Vitrine de Mídia ---------- */
+const MidiaPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AnyRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("midia_showcase" as any).select("*") as any)
+      .order("ordem", { ascending: true })
+      .order("created_at", { ascending: false });
+    if (error) toast.error("Erro ao carregar"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openNew = () => {
+    setEditing({ titulo: "", subtitulo: "", imagem_url: "", link_url: "", ordem: rows.length, ativo: true });
+    setOpen(true);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!editing) return;
+    if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem"); return; }
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("midia").upload(path, file, { upsert: false, contentType: file.type });
+    if (upErr) { toast.error("Falha no upload: " + upErr.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("midia").getPublicUrl(path);
+    setEditing({ ...editing, imagem_url: data.publicUrl });
+    setUploading(false);
+    toast.success("Imagem enviada");
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.titulo || !editing.imagem_url) { toast.error("Preencha título e imagem"); return; }
+    const { id, created_at, updated_at, ...rest } = editing;
+    rest.ordem = Number(rest.ordem) || 0;
+    Object.keys(rest).forEach(k => { if (rest[k] === "") rest[k] = null; });
+    rest.titulo = editing.titulo;
+    rest.imagem_url = editing.imagem_url;
+    const tbl: any = supabase.from("midia_showcase" as any);
+    const res = id ? await tbl.update(rest).eq("id", id) : await tbl.insert(rest);
+    if (res.error) toast.error("Erro: " + res.error.message);
+    else { toast.success("Salvo"); setOpen(false); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Excluir este slide?")) return;
+    const { error } = await (supabase.from("midia_showcase" as any) as any).delete().eq("id", id);
+    if (error) toast.error("Erro"); else { toast.success("Excluído"); load(); }
+  };
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">VITRINE DE MÍDIA</h2>
+        <Button onClick={openNew} size="sm" className="bg-primary text-primary-foreground"><Plus className="h-4 w-4 mr-1" /> Novo slide</Button>
+      </div>
+
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground mono text-sm py-8">// nenhum slide cadastrado</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map(s => (
+            <li key={s.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-primary/20 bg-background/40 p-3">
+              <img src={s.imagem_url} alt={s.titulo} className="h-14 w-24 object-cover rounded border border-primary/30 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-display text-silver truncate">{s.titulo}</span>
+                  <span className="mono text-[10px] text-primary">// ordem {s.ordem}</span>
+                  {!s.ativo && <span className="text-[10px] mono text-amber-400">inativo</span>}
+                </div>
+                {s.subtitulo && <p className="text-xs text-muted-foreground truncate">{s.subtitulo}</p>}
+                {s.link_url && <a href={s.link_url} target="_blank" rel="noopener" className="text-[10px] text-primary truncate block max-w-[60vw]">{s.link_url}</a>}
+              </div>
+              <Button size="icon" variant="ghost" onClick={() => { setEditing(s); setOpen(true); }} className="h-8 w-8 text-primary"><Pencil className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => del(s.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card border-primary/40 max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display tracking-widest">{editing?.id ? "EDITAR SLIDE" : "NOVO SLIDE"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Título</Label>
+                <Input value={editing.titulo ?? ""} onChange={e => setEditing({ ...editing, titulo: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Subtítulo</Label>
+                <Input value={editing.subtitulo ?? ""} onChange={e => setEditing({ ...editing, subtitulo: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Imagem</Label>
+                <Input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])} disabled={uploading} className="bg-input/60 border-primary/30 mt-1 text-xs" />
+                {editing.imagem_url && <img src={editing.imagem_url} alt="preview" className="mt-2 h-32 w-full object-cover rounded border border-primary/30" />}
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ou cole a URL da imagem</Label>
+                <Input value={editing.imagem_url ?? ""} onChange={e => setEditing({ ...editing, imagem_url: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Link de redirecionamento (opcional)</Label>
+                <Input placeholder="https://..." value={editing.link_url ?? ""} onChange={e => setEditing({ ...editing, link_url: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
               </div>
               <div className="flex gap-3">
                 <div className="flex-1">
