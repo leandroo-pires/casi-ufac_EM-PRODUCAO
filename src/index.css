@@ -156,6 +156,9 @@
   }
 
   .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Staggered reveal — usar com .reveal e style={{animationDelay:'120ms'}} */
+  .reveal { opacity: 0; animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 }
 
 /* Scrollbar */
