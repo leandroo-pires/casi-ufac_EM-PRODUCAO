@@ -15,6 +15,7 @@ import MatrizCurricular from "./pages/MatrizCurricular";
 import CalendarioAcademico from "./pages/CalendarioAcademico";
 import Documentos from "./pages/Documentos";
 import Ouvidoria from "./pages/Ouvidoria";
+import Comunidade from "./pages/Comunidade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
