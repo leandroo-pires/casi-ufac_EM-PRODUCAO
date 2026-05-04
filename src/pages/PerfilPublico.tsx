@@ -63,12 +63,12 @@ const PerfilPublico = () => {
   const name = profile.nickname || profile.display_name || "Aluno SI";
   const realName = profile.display_name && profile.nickname && profile.display_name !== profile.nickname ? profile.display_name : null;
 
-  const socials: { key: string; value: string | null; icon: any; type: "instagram" | "twitter" | "github" | "linkedin" }[] = [
-    { key: "instagram", value: profile.instagram, icon: Instagram, type: "instagram" },
-    { key: "github", value: profile.github, icon: Github, type: "github" },
-    { key: "linkedin", value: profile.linkedin, icon: Linkedin, type: "linkedin" },
-    { key: "twitter", value: profile.twitter, icon: Twitter, type: "twitter" },
-  ].filter(s => !!s.value);
+  const socials = ([
+    { key: "instagram", value: profile.instagram, icon: Instagram, type: "instagram" as const },
+    { key: "github", value: profile.github, icon: Github, type: "github" as const },
+    { key: "linkedin", value: profile.linkedin, icon: Linkedin, type: "linkedin" as const },
+    { key: "twitter", value: profile.twitter, icon: Twitter, type: "twitter" as const },
+  ]).filter(s => !!s.value);
 
   return (
     <Layout>
