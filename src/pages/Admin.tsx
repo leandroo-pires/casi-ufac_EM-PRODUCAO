@@ -926,7 +926,7 @@ const AcervoTccsPanel = () => {
   };
   useEffect(() => { load(); }, []);
 
-  const openNew = () => setEditing({ titulo: "", autor: "", ano: new Date().getFullYear(), descricao: "", pdf_url: "", capa_url: "", ordem: 0, ativo: true }) || setOpen(true);
+  const openNew = () => { setEditing({ titulo: "", autor: "", ano: new Date().getFullYear(), descricao: "", pdf_url: "", capa_url: "", ordem: 0, ativo: true }); setOpen(true); };
 
   const uploadFile = async (file: File, kind: "pdf" | "img") => {
     setUploading(true);
@@ -1035,7 +1035,7 @@ const AcervoFotosPanel = () => {
   };
   useEffect(() => { load(); }, []);
 
-  const openNew = () => setEditing({ titulo: "", descricao: "", imagem_url: "", evento: "", ano: new Date().getFullYear(), ordem: 0, ativo: true }) || setOpen(true);
+  const openNew = () => { setEditing({ titulo: "", descricao: "", imagem_url: "", evento: "", ano: new Date().getFullYear(), ordem: 0, ativo: true }); setOpen(true); };
 
   const uploadImg = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem"); return; }
@@ -1140,7 +1140,7 @@ const LiteraturasPanel = () => {
   };
   useEffect(() => { load(); }, []);
 
-  const openNew = () => setEditing({ titulo: "", autores: "", area: "", disciplina: "", descricao: "", capa_url: "", link_url: "", professor: "", ordem: 0, ativo: true }) || setOpen(true);
+  const openNew = () => { setEditing({ titulo: "", autores: "", area: "", disciplina: "", descricao: "", capa_url: "", link_url: "", professor: "", ordem: 0, ativo: true }); setOpen(true); };
 
   const uploadCapa = async (file: File) => {
     setUploading(true);
