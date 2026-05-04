@@ -53,7 +53,7 @@ const Comunidade = () => {
     const missing = userIds.filter((id) => !profiles[id]);
     if (missing.length === 0) return;
     const [{ data: profs }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("user_id,nickname,display_name,avatar_url").in("user_id", missing),
+      (supabase.rpc as any)("get_public_profiles", { _user_ids: missing }),
       supabase.from("user_roles").select("user_id").eq("role", "admin").in("user_id", missing),
     ]);
     const adminSet = new Set((roles ?? []).map((r: any) => r.user_id));
@@ -62,7 +62,6 @@ const Comunidade = () => {
       (profs ?? []).forEach((p: any) => {
         next[p.user_id] = { ...p, isAdmin: adminSet.has(p.user_id) };
       });
-      // Garante registro mínimo mesmo sem profile
       missing.forEach((id) => {
         if (!next[id]) next[id] = { user_id: id, nickname: null, display_name: null, avatar_url: null, isAdmin: adminSet.has(id) };
       });
@@ -202,8 +201,8 @@ const Comunidade = () => {
               const adminAuthor = p?.isAdmin;
               return (
                 <div key={group.items[0].id} className="flex gap-3 animate-fade-up">
-                  <div className="shrink-0 relative">
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary-glow p-0.5">
+                  <Link to={`/perfil/${group.author}`} className="shrink-0 relative group/avatar" aria-label={`Ver perfil de ${name}`}>
+                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary-glow p-0.5 group-hover/avatar:shadow-[var(--glow-primary)] transition-shadow">
                       <div className="h-full w-full rounded-full bg-background overflow-hidden flex items-center justify-center">
                         {p?.avatar_url ? (
                           <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
@@ -217,12 +216,12 @@ const Comunidade = () => {
                         <Crown className="h-2.5 w-2.5 text-background" fill="currentColor" />
                       </span>
                     )}
-                  </div>
+                  </Link>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">
-                      <span className={`font-display text-sm tracking-wide ${adminAuthor ? "text-[hsl(var(--gold))] text-glow" : "text-primary"}`}>
+                      <Link to={`/perfil/${group.author}`} className={`font-display text-sm tracking-wide hover:underline ${adminAuthor ? "text-[hsl(var(--gold))] text-glow" : "text-primary"}`}>
                         {name}
-                      </span>
+                      </Link>
                       {adminAuthor && (
                         <span className="inline-flex items-center gap-1 rounded px-1.5 py-px bg-[hsl(var(--gold)/0.15)] text-[hsl(var(--gold))] mono text-[9px] uppercase tracking-widest border border-[hsl(var(--gold)/0.4)]">
                           <Shield className="h-2.5 w-2.5" /> Admin

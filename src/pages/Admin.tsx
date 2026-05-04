@@ -85,7 +85,7 @@ const Admin = () => {
         </header>
 
         <Tabs defaultValue="editais" className="w-full">
-          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1 h-auto p-1 mb-4">
+          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-1 h-auto p-1 mb-4">
             <TabsTrigger value="editais" className="font-display text-xs uppercase tracking-widest">Editais</TabsTrigger>
             <TabsTrigger value="eventos" className="font-display text-xs uppercase tracking-widest">Eventos</TabsTrigger>
             <TabsTrigger value="avisos" className="font-display text-xs uppercase tracking-widest">Avisos</TabsTrigger>
@@ -95,6 +95,9 @@ const Admin = () => {
             <TabsTrigger value="midia" className="font-display text-xs uppercase tracking-widest">Vitrine</TabsTrigger>
             <TabsTrigger value="calendario" className="font-display text-xs uppercase tracking-widest">Calendário</TabsTrigger>
             <TabsTrigger value="documentos" className="font-display text-xs uppercase tracking-widest">Documentos</TabsTrigger>
+            <TabsTrigger value="acervo_tccs" className="font-display text-xs uppercase tracking-widest">TCCs</TabsTrigger>
+            <TabsTrigger value="acervo_fotos" className="font-display text-xs uppercase tracking-widest">Fotos</TabsTrigger>
+            <TabsTrigger value="literaturas" className="font-display text-xs uppercase tracking-widest">Literaturas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="editais"><CrudPanel table="editais" categoria="Edital" /></TabsContent>
@@ -106,6 +109,9 @@ const Admin = () => {
           <TabsContent value="midia"><MidiaPanel /></TabsContent>
           <TabsContent value="calendario"><CalendarioPanel /></TabsContent>
           <TabsContent value="documentos"><DocumentosPanel /></TabsContent>
+          <TabsContent value="acervo_tccs"><AcervoTccsPanel /></TabsContent>
+          <TabsContent value="acervo_fotos"><AcervoFotosPanel /></TabsContent>
+          <TabsContent value="literaturas"><LiteraturasPanel /></TabsContent>
         </Tabs>
       </div>
     </Layout>
@@ -891,6 +897,327 @@ const MidiaPanel = () => {
                   <Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Ativo</Label>
                   <Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} />
                 </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={uploading} className="bg-primary text-primary-foreground">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/* ---------- Painel: Acervo TCCs ---------- */
+const AcervoTccsPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AnyRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("acervo_tccs" as any).select("*") as any).order("ano", { ascending: false }).order("ordem");
+    if (error) toast.error("Erro ao carregar"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openNew = () => { setEditing({ titulo: "", autor: "", ano: new Date().getFullYear(), descricao: "", pdf_url: "", capa_url: "", ordem: 0, ativo: true }); setOpen(true); };
+
+  const uploadFile = async (file: File, kind: "pdf" | "img") => {
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `tccs/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("acervo").upload(path, file, { upsert: false, contentType: file.type });
+    if (error) { toast.error("Falha no upload: " + error.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("acervo").getPublicUrl(path);
+    setEditing(prev => prev ? { ...prev, [kind === "pdf" ? "pdf_url" : "capa_url"]: data.publicUrl } : prev);
+    setUploading(false);
+    toast.success("Arquivo enviado");
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.titulo || !editing.autor || !editing.pdf_url || !editing.ano) { toast.error("Título, autor, ano e PDF obrigatórios"); return; }
+    const { id, created_at, updated_at, ...rest } = editing;
+    rest.ano = Number(rest.ano);
+    rest.ordem = Number(rest.ordem) || 0;
+    Object.keys(rest).forEach(k => { if (rest[k] === "") rest[k] = null; });
+    const tbl: any = supabase.from("acervo_tccs" as any);
+    const res = id ? await tbl.update(rest).eq("id", id) : await tbl.insert(rest);
+    if (res.error) toast.error("Erro: " + res.error.message); else { toast.success("Salvo"); setOpen(false); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Excluir este TCC?")) return;
+    const { error } = await (supabase.from("acervo_tccs" as any) as any).delete().eq("id", id);
+    if (error) toast.error("Erro"); else { toast.success("Excluído"); load(); }
+  };
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">ACERVO :: TCCs</h2>
+        <Button onClick={openNew} size="sm" className="bg-primary text-primary-foreground"><Plus className="h-4 w-4 mr-1" /> Novo TCC</Button>
+      </div>
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground mono text-sm py-8">// nenhum TCC cadastrado</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map(t => (
+            <li key={t.id} className="flex items-center gap-3 rounded-lg border border-primary/20 bg-background/40 p-3">
+              <div className="h-12 w-12 rounded bg-primary/10 overflow-hidden shrink-0 flex items-center justify-center">
+                {t.capa_url ? <img src={t.capa_url} className="h-full w-full object-cover" alt="" /> : "🎓"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-display text-silver truncate">{t.titulo}</div>
+                <div className="text-xs text-muted-foreground truncate">{t.autor} · {t.ano}{!t.ativo && " · inativo"}</div>
+              </div>
+              <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }} className="h-8 w-8 text-primary"><Pencil className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => del(t.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card border-primary/40 max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display tracking-widest">{editing?.id ? "EDITAR TCC" : "NOVO TCC"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Título</Label><Input value={editing.titulo ?? ""} onChange={e => setEditing({ ...editing, titulo: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Autor</Label><Input value={editing.autor ?? ""} onChange={e => setEditing({ ...editing, autor: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Ano</Label><Input type="number" value={editing.ano ?? ""} onChange={e => setEditing({ ...editing, ano: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Descrição / resumo</Label><Textarea value={editing.descricao ?? ""} onChange={e => setEditing({ ...editing, descricao: e.target.value })} rows={3} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">PDF do TCC</Label>
+                <Input type="file" accept="application/pdf" onChange={e => e.target.files?.[0] && uploadFile(e.target.files[0], "pdf")} disabled={uploading} className="bg-input/60 border-primary/30 mt-1 text-xs" />
+                {editing.pdf_url && <a href={editing.pdf_url} target="_blank" rel="noopener" className="text-xs text-primary mono mt-1 inline-block truncate max-w-full">{editing.pdf_url}</a>}
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Capa (opcional)</Label>
+                <Input type="file" accept="image/*" onChange={e => e.target.files?.[0] && uploadFile(e.target.files[0], "img")} disabled={uploading} className="bg-input/60 border-primary/30 mt-1 text-xs" />
+                {editing.capa_url && <img src={editing.capa_url} alt="capa" className="mt-2 h-24 rounded border border-primary/30" />}
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1"><Label className="text-xs uppercase tracking-widest text-muted-foreground">Ordem</Label><Input type="number" value={editing.ordem ?? 0} onChange={e => setEditing({ ...editing, ordem: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+                <div className="flex flex-col justify-end pb-1"><Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Ativo</Label><Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} /></div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={uploading} className="bg-primary text-primary-foreground">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/* ---------- Painel: Acervo Fotos ---------- */
+const AcervoFotosPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AnyRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("acervo_fotos" as any).select("*") as any).order("ano", { ascending: false }).order("ordem");
+    if (error) toast.error("Erro ao carregar"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openNew = () => { setEditing({ titulo: "", descricao: "", imagem_url: "", evento: "", ano: new Date().getFullYear(), ordem: 0, ativo: true }); setOpen(true); };
+
+  const uploadImg = async (file: File) => {
+    if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem"); return; }
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `fotos/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("acervo").upload(path, file, { upsert: false, contentType: file.type });
+    if (error) { toast.error("Erro: " + error.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("acervo").getPublicUrl(path);
+    setEditing(prev => prev ? { ...prev, imagem_url: data.publicUrl } : prev);
+    setUploading(false);
+    toast.success("Imagem enviada");
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.titulo || !editing.imagem_url) { toast.error("Título e imagem obrigatórios"); return; }
+    const { id, created_at, updated_at, ...rest } = editing;
+    rest.ano = rest.ano ? Number(rest.ano) : null;
+    rest.ordem = Number(rest.ordem) || 0;
+    Object.keys(rest).forEach(k => { if (rest[k] === "") rest[k] = null; });
+    const tbl: any = supabase.from("acervo_fotos" as any);
+    const res = id ? await tbl.update(rest).eq("id", id) : await tbl.insert(rest);
+    if (res.error) toast.error("Erro: " + res.error.message); else { toast.success("Salvo"); setOpen(false); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Excluir esta foto?")) return;
+    const { error } = await (supabase.from("acervo_fotos" as any) as any).delete().eq("id", id);
+    if (error) toast.error("Erro"); else { toast.success("Excluída"); load(); }
+  };
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">ACERVO :: FOTOS</h2>
+        <Button onClick={openNew} size="sm" className="bg-primary text-primary-foreground"><Plus className="h-4 w-4 mr-1" /> Nova foto</Button>
+      </div>
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground mono text-sm py-8">// nenhuma foto cadastrada</p>
+      ) : (
+        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {rows.map(f => (
+            <li key={f.id} className="rounded-lg border border-primary/20 bg-background/40 p-3 flex gap-3">
+              <img src={f.imagem_url} alt="" className="h-16 w-16 object-cover rounded border border-primary/30 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-display text-silver text-sm truncate">{f.titulo}</div>
+                <div className="text-[10px] text-muted-foreground truncate">{f.evento} {f.ano && `· ${f.ano}`}</div>
+                <div className="flex gap-1 mt-1">
+                  <Button size="icon" variant="ghost" onClick={() => { setEditing(f); setOpen(true); }} className="h-7 w-7 text-primary"><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => del(f.id)} className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card border-primary/40 max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display tracking-widest">{editing?.id ? "EDITAR FOTO" : "NOVA FOTO"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Título</Label><Input value={editing.titulo ?? ""} onChange={e => setEditing({ ...editing, titulo: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Evento</Label><Input value={editing.evento ?? ""} onChange={e => setEditing({ ...editing, evento: e.target.value })} placeholder="Calourada, Semana Acadêmica..." className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Ano</Label><Input type="number" value={editing.ano ?? ""} onChange={e => setEditing({ ...editing, ano: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Descrição</Label><Textarea value={editing.descricao ?? ""} onChange={e => setEditing({ ...editing, descricao: e.target.value })} rows={2} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Imagem</Label>
+                <Input type="file" accept="image/*" onChange={e => e.target.files?.[0] && uploadImg(e.target.files[0])} disabled={uploading} className="bg-input/60 border-primary/30 mt-1 text-xs" />
+                {editing.imagem_url && <img src={editing.imagem_url} alt="preview" className="mt-2 h-32 w-full object-cover rounded border border-primary/30" />}
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1"><Label className="text-xs uppercase tracking-widest text-muted-foreground">Ordem</Label><Input type="number" value={editing.ordem ?? 0} onChange={e => setEditing({ ...editing, ordem: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+                <div className="flex flex-col justify-end pb-1"><Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Ativo</Label><Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} /></div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={uploading} className="bg-primary text-primary-foreground">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/* ---------- Painel: Literaturas ---------- */
+const LiteraturasPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AnyRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("literaturas" as any).select("*") as any).order("ordem");
+    if (error) toast.error("Erro ao carregar"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openNew = () => { setEditing({ titulo: "", autores: "", area: "", disciplina: "", descricao: "", capa_url: "", link_url: "", professor: "", ordem: 0, ativo: true }); setOpen(true); };
+
+  const uploadCapa = async (file: File) => {
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `livros/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("acervo").upload(path, file, { upsert: false, contentType: file.type });
+    if (error) { toast.error("Erro: " + error.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("acervo").getPublicUrl(path);
+    setEditing(prev => prev ? { ...prev, capa_url: data.publicUrl } : prev);
+    setUploading(false);
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.titulo || !editing.autores) { toast.error("Título e autores obrigatórios"); return; }
+    const { id, created_at, updated_at, ...rest } = editing;
+    rest.ordem = Number(rest.ordem) || 0;
+    Object.keys(rest).forEach(k => { if (rest[k] === "") rest[k] = null; });
+    const tbl: any = supabase.from("literaturas" as any);
+    const res = id ? await tbl.update(rest).eq("id", id) : await tbl.insert(rest);
+    if (res.error) toast.error("Erro: " + res.error.message); else { toast.success("Salvo"); setOpen(false); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Remover esta literatura?")) return;
+    const { error } = await (supabase.from("literaturas" as any) as any).delete().eq("id", id);
+    if (error) toast.error("Erro"); else { toast.success("Excluída"); load(); }
+  };
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">ACERVO :: LITERATURAS</h2>
+        <Button onClick={openNew} size="sm" className="bg-primary text-primary-foreground"><Plus className="h-4 w-4 mr-1" /> Nova</Button>
+      </div>
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground mono text-sm py-8">// nenhuma literatura cadastrada</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map(b => (
+            <li key={b.id} className="flex items-center gap-3 rounded-lg border border-primary/20 bg-background/40 p-3">
+              <div className="h-12 w-12 rounded bg-primary/10 overflow-hidden shrink-0 flex items-center justify-center">
+                {b.capa_url ? <img src={b.capa_url} className="h-full w-full object-cover" alt="" /> : "📚"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-display text-silver truncate">{b.titulo}</div>
+                <div className="text-xs text-muted-foreground truncate">{b.autores} {b.area && `· ${b.area}`}{!b.ativo && " · inativo"}</div>
+              </div>
+              <Button size="icon" variant="ghost" onClick={() => { setEditing(b); setOpen(true); }} className="h-8 w-8 text-primary"><Pencil className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => del(b.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card border-primary/40 max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display tracking-widest">{editing?.id ? "EDITAR LITERATURA" : "NOVA LITERATURA"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Título</Label><Input value={editing.titulo ?? ""} onChange={e => setEditing({ ...editing, titulo: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Autores</Label><Input value={editing.autores ?? ""} onChange={e => setEditing({ ...editing, autores: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div className="flex gap-3">
+                <div className="flex-1"><Label className="text-xs uppercase tracking-widest text-muted-foreground">Área</Label><Input value={editing.area ?? ""} onChange={e => setEditing({ ...editing, area: e.target.value })} placeholder="Programação, Banco de Dados..." className="bg-input/60 border-primary/30 mt-1" /></div>
+                <div className="flex-1"><Label className="text-xs uppercase tracking-widest text-muted-foreground">Disciplina</Label><Input value={editing.disciplina ?? ""} onChange={e => setEditing({ ...editing, disciplina: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              </div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Professor que recomenda</Label><Input value={editing.professor ?? ""} onChange={e => setEditing({ ...editing, professor: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Descrição</Label><Textarea value={editing.descricao ?? ""} onChange={e => setEditing({ ...editing, descricao: e.target.value })} rows={3} className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div><Label className="text-xs uppercase tracking-widest text-muted-foreground">Link externo (opcional)</Label><Input value={editing.link_url ?? ""} onChange={e => setEditing({ ...editing, link_url: e.target.value })} placeholder="https://..." className="bg-input/60 border-primary/30 mt-1" /></div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Capa (opcional)</Label>
+                <Input type="file" accept="image/*" onChange={e => e.target.files?.[0] && uploadCapa(e.target.files[0])} disabled={uploading} className="bg-input/60 border-primary/30 mt-1 text-xs" />
+                {editing.capa_url && <img src={editing.capa_url} alt="capa" className="mt-2 h-24 rounded border border-primary/30" />}
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1"><Label className="text-xs uppercase tracking-widest text-muted-foreground">Ordem</Label><Input type="number" value={editing.ordem ?? 0} onChange={e => setEditing({ ...editing, ordem: e.target.value })} className="bg-input/60 border-primary/30 mt-1" /></div>
+                <div className="flex flex-col justify-end pb-1"><Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Ativo</Label><Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} /></div>
               </div>
             </div>
           )}
