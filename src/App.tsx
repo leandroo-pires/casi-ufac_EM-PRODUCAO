@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Perfil from "./pages/Perfil";
+import PerfilPublico from "./pages/PerfilPublico";
 import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import Editais from "./pages/Editais";
@@ -16,6 +17,7 @@ import CalendarioAcademico from "./pages/CalendarioAcademico";
 import Documentos from "./pages/Documentos";
 import Ouvidoria from "./pages/Ouvidoria";
 import Comunidade from "./pages/Comunidade";
+import Acervo from "./pages/Acervo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
