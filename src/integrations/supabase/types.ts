@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      acervo_fotos: {
+        Row: {
+          ano: number | null
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          evento: string | null
+          id: string
+          imagem_url: string
+          ordem: number
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ano?: number | null
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          evento?: string | null
+          id?: string
+          imagem_url: string
+          ordem?: number
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ano?: number | null
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          evento?: string | null
+          id?: string
+          imagem_url?: string
+          ordem?: number
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      acervo_tccs: {
+        Row: {
+          ano: number
+          ativo: boolean
+          autor: string
+          capa_url: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          ordem: number
+          pdf_url: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          ativo?: boolean
+          autor: string
+          capa_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          pdf_url: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          ativo?: boolean
+          autor?: string
+          capa_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          pdf_url?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendario_academico: {
         Row: {
           ano: number
@@ -222,6 +303,54 @@ export type Database = {
           is_novo?: boolean
           local?: string | null
           resumo_url?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      literaturas: {
+        Row: {
+          area: string | null
+          ativo: boolean
+          autores: string
+          capa_url: string | null
+          created_at: string
+          descricao: string | null
+          disciplina: string | null
+          id: string
+          link_url: string | null
+          ordem: number
+          professor: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          ativo?: boolean
+          autores: string
+          capa_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          disciplina?: string | null
+          id?: string
+          link_url?: string | null
+          ordem?: number
+          professor?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          ativo?: boolean
+          autores?: string
+          capa_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          disciplina?: string | null
+          id?: string
+          link_url?: string | null
+          ordem?: number
+          professor?: string | null
           titulo?: string
           updated_at?: string
         }
@@ -436,59 +565,40 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles_public: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          curso: string | null
-          display_name: string | null
-          github: string | null
-          id: string | null
-          instagram: string | null
-          linkedin: string | null
-          nickname: string | null
-          periodo: string | null
-          twitter: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          curso?: string | null
-          display_name?: string | null
-          github?: string | null
-          id?: string | null
-          instagram?: string | null
-          linkedin?: string | null
-          nickname?: string | null
-          periodo?: string | null
-          twitter?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          curso?: string | null
-          display_name?: string | null
-          github?: string | null
-          id?: string | null
-          instagram?: string | null
-          linkedin?: string | null
-          nickname?: string | null
-          periodo?: string | null
-          twitter?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
+      get_public_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          curso: string
+          display_name: string
+          github: string
+          instagram: string
+          linkedin: string
+          nickname: string
+          periodo: string
+          twitter: string
+          user_id: string
+        }[]
+      }
+      get_public_profiles: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          bio: string
+          curso: string
+          display_name: string
+          github: string
+          instagram: string
+          linkedin: string
+          nickname: string
+          periodo: string
+          twitter: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
