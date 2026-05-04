@@ -53,7 +53,7 @@ const Comunidade = () => {
     const missing = userIds.filter((id) => !profiles[id]);
     if (missing.length === 0) return;
     const [{ data: profs }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("user_id,nickname,display_name,avatar_url").in("user_id", missing),
+      (supabase.rpc as any)("get_public_profiles", { _user_ids: missing }),
       supabase.from("user_roles").select("user_id").eq("role", "admin").in("user_id", missing),
     ]);
     const adminSet = new Set((roles ?? []).map((r: any) => r.user_id));
@@ -62,7 +62,6 @@ const Comunidade = () => {
       (profs ?? []).forEach((p: any) => {
         next[p.user_id] = { ...p, isAdmin: adminSet.has(p.user_id) };
       });
-      // Garante registro mínimo mesmo sem profile
       missing.forEach((id) => {
         if (!next[id]) next[id] = { user_id: id, nickname: null, display_name: null, avatar_url: null, isAdmin: adminSet.has(id) };
       });
