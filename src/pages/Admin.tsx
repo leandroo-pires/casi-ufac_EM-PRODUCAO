@@ -85,7 +85,7 @@ const Admin = () => {
         </header>
 
         <Tabs defaultValue="editais" className="w-full">
-          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1 h-auto p-1 mb-4">
+          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-1 h-auto p-1 mb-4">
             <TabsTrigger value="editais" className="font-display text-xs uppercase tracking-widest">Editais</TabsTrigger>
             <TabsTrigger value="eventos" className="font-display text-xs uppercase tracking-widest">Eventos</TabsTrigger>
             <TabsTrigger value="avisos" className="font-display text-xs uppercase tracking-widest">Avisos</TabsTrigger>
@@ -95,6 +95,9 @@ const Admin = () => {
             <TabsTrigger value="midia" className="font-display text-xs uppercase tracking-widest">Vitrine</TabsTrigger>
             <TabsTrigger value="calendario" className="font-display text-xs uppercase tracking-widest">Calendário</TabsTrigger>
             <TabsTrigger value="documentos" className="font-display text-xs uppercase tracking-widest">Documentos</TabsTrigger>
+            <TabsTrigger value="acervo_tccs" className="font-display text-xs uppercase tracking-widest">TCCs</TabsTrigger>
+            <TabsTrigger value="acervo_fotos" className="font-display text-xs uppercase tracking-widest">Fotos</TabsTrigger>
+            <TabsTrigger value="literaturas" className="font-display text-xs uppercase tracking-widest">Literaturas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="editais"><CrudPanel table="editais" categoria="Edital" /></TabsContent>
@@ -106,6 +109,9 @@ const Admin = () => {
           <TabsContent value="midia"><MidiaPanel /></TabsContent>
           <TabsContent value="calendario"><CalendarioPanel /></TabsContent>
           <TabsContent value="documentos"><DocumentosPanel /></TabsContent>
+          <TabsContent value="acervo_tccs"><AcervoTccsPanel /></TabsContent>
+          <TabsContent value="acervo_fotos"><AcervoFotosPanel /></TabsContent>
+          <TabsContent value="literaturas"><LiteraturasPanel /></TabsContent>
         </Tabs>
       </div>
     </Layout>
