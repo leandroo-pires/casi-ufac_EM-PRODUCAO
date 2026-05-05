@@ -3,6 +3,7 @@ import { OuvidoriaPanel } from "@/components/OuvidoriaPanel";
 import { EventosPanel } from "@/components/EventosPanel";
 import { MediaShowcase } from "@/components/MediaShowcase";
 import { SobreCASI } from "@/components/SobreCASI";
+import { HomeCardsGrid } from "@/components/HomeCardsGrid";
 import logo from "@/assets/casi-logo.png";
 
 const Index = () => (
@@ -41,6 +42,8 @@ const Index = () => (
         <div className="reveal" style={{ animationDelay: "740ms" }}><SobreCASI /></div>
       </div>
     </section>
+
+    <HomeCardsGrid />
   </Layout>
 );
 
