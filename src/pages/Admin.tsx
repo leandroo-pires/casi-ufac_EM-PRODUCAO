@@ -46,86 +46,325 @@ const fieldDefs: Record<Exclude<TableName, "ouvidorias">, { key: string; label: 
   ],
 };
 
+type SectionKey =
+  | "home_cards" | "editais" | "eventos" | "avisos" | "ouvidorias"
+  | "diretoria" | "conteudo" | "midia" | "calendario" | "documentos"
+  | "acervo_tccs" | "acervo_fotos" | "literaturas";
+
+const NAV_GROUPS: { label: string; items: { key: SectionKey; label: string; icon: any }[] }[] = [
+  {
+    label: "Conteúdo da Home",
+    items: [
+      { key: "home_cards", label: "Quadros da Home", icon: LayoutDashboard },
+      { key: "midia", label: "Vitrine de Mídia", icon: ImageIcon },
+      { key: "conteudo", label: "Textos do Site", icon: FileEdit },
+    ],
+  },
+  {
+    label: "Comunicação",
+    items: [
+      { key: "editais", label: "Editais", icon: FileText },
+      { key: "avisos", label: "Avisos", icon: Megaphone },
+      { key: "eventos", label: "Eventos", icon: CalendarDays },
+      { key: "ouvidorias", label: "Ouvidorias", icon: Inbox },
+    ],
+  },
+  {
+    label: "Acadêmico",
+    items: [
+      { key: "calendario", label: "Calendário", icon: CalendarRange },
+      { key: "documentos", label: "Documentos", icon: FolderOpen },
+    ],
+  },
+  {
+    label: "Acervo",
+    items: [
+      { key: "acervo_tccs", label: "TCCs", icon: GraduationCap },
+      { key: "acervo_fotos", label: "Fotos", icon: Camera },
+      { key: "literaturas", label: "Literaturas", icon: BookOpen },
+    ],
+  },
+  {
+    label: "Equipe",
+    items: [
+      { key: "diretoria", label: "Diretoria", icon: Users },
+    ],
+  },
+];
+
+const SECTION_LABEL: Record<SectionKey, string> = Object.fromEntries(
+  NAV_GROUPS.flatMap(g => g.items.map(i => [i.key, i.label]))
+) as Record<SectionKey, string>;
+
 const Admin = () => {
   const { isAdmin, user, loading } = useIsAdmin();
   const navigate = useNavigate();
+  const [section, setSection] = useState<SectionKey>("home_cards");
 
-  // Redireciona para /auth assim que o carregamento termina e não há usuário
   useEffect(() => {
     if (!loading && !user) navigate("/auth", { replace: true });
   }, [loading, user, navigate]);
 
-  if (loading) {
+  if (loading || !user) {
     return (
-      <Layout>
-        <div className="container py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-      </Layout>
-    );
-  }
-  if (!user) {
-    // Em transição de redirecionamento
-    return (
-      <Layout>
-        <div className="container py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-      </Layout>
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container py-20 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
     );
   }
   if (!isAdmin) {
     return (
-      <Layout>
-        <div className="container py-16 max-w-md text-center">
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container py-16 max-w-md text-center">
           <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-3" />
           <h1 className="font-display text-xl text-silver mb-2">ACESSO NEGADO</h1>
           <p className="text-muted-foreground mono text-sm">// permissão 'admin' necessária</p>
           <Button onClick={() => navigate("/")} variant="outline" className="mt-4 border-primary/50 text-primary">Voltar ao início</Button>
-        </div>
-      </Layout>
+        </main>
+        <Footer />
+      </div>
     );
   }
 
+  const renderSection = () => {
+    switch (section) {
+      case "home_cards": return <HomeCardsPanel />;
+      case "editais": return <CrudPanel table="editais" categoria="Edital" />;
+      case "eventos": return <CrudPanel table="eventos" />;
+      case "avisos": return <CrudPanel table="editais" categoria="Aviso" labelOverride="Avisos" />;
+      case "ouvidorias": return <OuvidoriasPanel />;
+      case "diretoria": return <DiretoriaPanel />;
+      case "conteudo": return <ConteudoPanel />;
+      case "midia": return <MidiaPanel />;
+      case "calendario": return <CalendarioPanel />;
+      case "documentos": return <DocumentosPanel />;
+      case "acervo_tccs": return <AcervoTccsPanel />;
+      case "acervo_fotos": return <AcervoFotosPanel />;
+      case "literaturas": return <LiteraturasPanel />;
+    }
+  };
+
   return (
-    <Layout>
-      <div className="container py-6 md:py-10">
-        <BackButton to="/" label="Início" />
-        <header className="mb-6">
-          <p className="mono text-[10px] sm:text-xs text-primary mb-1">// /admin :: diretoria</p>
-          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-silver text-glow tracking-widest">PAINEL ADMINISTRATIVO</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gestão de conteúdo e ouvidorias do CASI.</p>
-        </header>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <SidebarProvider>
+        <div className="flex flex-1 w-full">
+          <Sidebar collapsible="icon" className="border-r border-primary/20">
+            <SbHeader className="px-3 py-3 border-b border-primary/20">
+              <p className="mono text-[10px] text-primary tracking-widest">// /admin</p>
+              <p className="font-display text-xs text-silver tracking-widest group-data-[collapsible=icon]:hidden">PAINEL CASI</p>
+            </SbHeader>
+            <SidebarContent>
+              {NAV_GROUPS.map((g) => (
+                <SidebarGroup key={g.label}>
+                  <SidebarGroupLabel className="font-display text-[10px] tracking-widest text-primary/80 uppercase">
+                    {g.label}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {g.items.map((item) => {
+                        const Icon = item.icon;
+                        const active = section === item.key;
+                        return (
+                          <SidebarMenuItem key={item.key}>
+                            <SidebarMenuButton
+                              isActive={active}
+                              onClick={() => setSection(item.key)}
+                              tooltip={item.label}
+                              className={
+                                active
+                                  ? "bg-primary/15 text-primary border border-primary/40 hover:bg-primary/20"
+                                  : "hover:bg-primary/10 hover:text-primary"
+                              }
+                            >
+                              <Icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              ))}
+            </SidebarContent>
+          </Sidebar>
 
-        <Tabs defaultValue="editais" className="w-full">
-          <TabsList className="bg-card/60 border border-primary/30 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-1 h-auto p-1 mb-4">
-            <TabsTrigger value="editais" className="font-display text-xs uppercase tracking-widest">Editais</TabsTrigger>
-            <TabsTrigger value="eventos" className="font-display text-xs uppercase tracking-widest">Eventos</TabsTrigger>
-            <TabsTrigger value="avisos" className="font-display text-xs uppercase tracking-widest">Avisos</TabsTrigger>
-            <TabsTrigger value="ouvidorias" className="font-display text-xs uppercase tracking-widest">Ouvidorias</TabsTrigger>
-            <TabsTrigger value="diretoria" className="font-display text-xs uppercase tracking-widest">Diretoria</TabsTrigger>
-            <TabsTrigger value="conteudo" className="font-display text-xs uppercase tracking-widest">Conteúdo</TabsTrigger>
-            <TabsTrigger value="midia" className="font-display text-xs uppercase tracking-widest">Vitrine</TabsTrigger>
-            <TabsTrigger value="calendario" className="font-display text-xs uppercase tracking-widest">Calendário</TabsTrigger>
-            <TabsTrigger value="documentos" className="font-display text-xs uppercase tracking-widest">Documentos</TabsTrigger>
-            <TabsTrigger value="acervo_tccs" className="font-display text-xs uppercase tracking-widest">TCCs</TabsTrigger>
-            <TabsTrigger value="acervo_fotos" className="font-display text-xs uppercase tracking-widest">Fotos</TabsTrigger>
-            <TabsTrigger value="literaturas" className="font-display text-xs uppercase tracking-widest">Literaturas</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="editais"><CrudPanel table="editais" categoria="Edital" /></TabsContent>
-          <TabsContent value="eventos"><CrudPanel table="eventos" /></TabsContent>
-          <TabsContent value="avisos"><CrudPanel table="editais" categoria="Aviso" labelOverride="Avisos" /></TabsContent>
-          <TabsContent value="ouvidorias"><OuvidoriasPanel /></TabsContent>
-          <TabsContent value="diretoria"><DiretoriaPanel /></TabsContent>
-          <TabsContent value="conteudo"><ConteudoPanel /></TabsContent>
-          <TabsContent value="midia"><MidiaPanel /></TabsContent>
-          <TabsContent value="calendario"><CalendarioPanel /></TabsContent>
-          <TabsContent value="documentos"><DocumentosPanel /></TabsContent>
-          <TabsContent value="acervo_tccs"><AcervoTccsPanel /></TabsContent>
-          <TabsContent value="acervo_fotos"><AcervoFotosPanel /></TabsContent>
-          <TabsContent value="literaturas"><LiteraturasPanel /></TabsContent>
-        </Tabs>
-      </div>
-    </Layout>
+          <main className="flex-1 min-w-0">
+            <div className="border-b border-primary/20 bg-background/60 backdrop-blur sticky top-16 z-10">
+              <div className="flex items-center gap-3 px-4 py-3">
+                <SidebarTrigger className="text-primary" />
+                <BackButton to="/" label="Início" />
+                <div className="ml-auto text-right">
+                  <p className="mono text-[10px] text-primary tracking-widest">// /admin :: {section}</p>
+                  <h1 className="font-display text-sm sm:text-base text-silver tracking-widest">
+                    {SECTION_LABEL[section]}
+                  </h1>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+              {renderSection()}
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+      <Footer />
+    </div>
   );
 };
+
+/* ---------- Painel: Quadros da Home (CMS) ---------- */
+const HomeCardsPanel = () => {
+  const [rows, setRows] = useState<AnyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AnyRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase.from("home_cards" as any).select("*") as any)
+      .order("ordem", { ascending: true })
+      .order("created_at", { ascending: false });
+    if (error) toast.error("Erro ao carregar"); else setRows((data as any) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openNew = () => {
+    setEditing({ titulo: "", descricao: "", imagem_url: "", link_url: "", ordem: rows.length, ativo: true });
+    setOpen(true);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!editing) return;
+    if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem"); return; }
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("home-cards").upload(path, file, { upsert: false, contentType: file.type });
+    if (upErr) { toast.error("Falha no upload: " + upErr.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("home-cards").getPublicUrl(path);
+    setEditing({ ...editing, imagem_url: data.publicUrl });
+    setUploading(false);
+    toast.success("Imagem enviada");
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.titulo || !editing.imagem_url) { toast.error("Preencha título e imagem"); return; }
+    const { id, created_at, updated_at, ...rest } = editing;
+    rest.ordem = Number(rest.ordem) || 0;
+    Object.keys(rest).forEach(k => { if (rest[k] === "") rest[k] = null; });
+    rest.titulo = editing.titulo;
+    rest.imagem_url = editing.imagem_url;
+    const tbl: any = supabase.from("home_cards" as any);
+    const res = id ? await tbl.update(rest).eq("id", id) : await tbl.insert(rest);
+    if (res.error) toast.error("Erro: " + res.error.message);
+    else { toast.success("Salvo"); setOpen(false); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Excluir este quadro?")) return;
+    const { error } = await (supabase.from("home_cards" as any) as any).delete().eq("id", id);
+    if (error) toast.error("Erro"); else { toast.success("Excluído"); load(); }
+  };
+
+  return (
+    <div className="panel-base p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="font-display text-sm sm:text-lg text-silver tracking-widest">QUADROS DA HOME</h2>
+          <p className="text-xs text-muted-foreground mt-1">Cards livres exibidos na página principal do portal.</p>
+        </div>
+        <Button onClick={openNew} size="sm" className="bg-primary text-primary-foreground"><Plus className="h-4 w-4 mr-1" /> Novo quadro</Button>
+      </div>
+
+      {loading ? <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto my-8" /> : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground mono text-sm py-8">// nenhum quadro cadastrado</p>
+      ) : (
+        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {rows.map(c => (
+            <li key={c.id} className="rounded-lg border border-primary/20 bg-background/40 overflow-hidden flex flex-col">
+              <img src={c.imagem_url} alt={c.titulo} className="aspect-video w-full object-cover border-b border-primary/20" />
+              <div className="p-3 flex-1 flex flex-col">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-display text-silver text-sm truncate flex-1">{c.titulo}</span>
+                  {!c.ativo && <span className="text-[10px] mono text-amber-400">inativo</span>}
+                </div>
+                {c.descricao && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{c.descricao}</p>}
+                {c.link_url && (
+                  <a href={c.link_url} target="_blank" rel="noopener" className="text-[10px] text-primary truncate flex items-center gap-1 mb-2">
+                    <ExternalLink className="h-3 w-3" /> {c.link_url}
+                  </a>
+                )}
+                <div className="flex items-center justify-between mt-auto pt-2 border-t border-primary/10">
+                  <span className="mono text-[10px] text-primary">// ordem {c.ordem}</span>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setOpen(true); }} className="h-7 w-7 text-primary"><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => del(c.id)} className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card border-primary/40 max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display tracking-widest">{editing?.id ? "EDITAR QUADRO" : "NOVO QUADRO"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Título</Label>
+                <Input value={editing.titulo ?? ""} onChange={e => setEditing({ ...editing, titulo: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Descrição</Label>
+                <Textarea value={editing.descricao ?? ""} onChange={e => setEditing({ ...editing, descricao: e.target.value })} rows={3} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Imagem</Label>
+                <Input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])} disabled={uploading} className="bg-input/60 border-primary/30 mt-1 text-xs" />
+                {editing.imagem_url && <img src={editing.imagem_url} alt="preview" className="mt-2 h-32 w-full object-cover rounded border border-primary/30" />}
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ou cole a URL da imagem</Label>
+                <Input value={editing.imagem_url ?? ""} onChange={e => setEditing({ ...editing, imagem_url: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground">Link de redirecionamento (opcional)</Label>
+                <Input placeholder="https://..." value={editing.link_url ?? ""} onChange={e => setEditing({ ...editing, link_url: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">Ordem</Label>
+                  <Input type="number" value={editing.ordem ?? 0} onChange={e => setEditing({ ...editing, ordem: e.target.value })} className="bg-input/60 border-primary/30 mt-1" />
+                </div>
+                <div className="flex flex-col justify-end pb-1">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Ativo</Label>
+                  <Switch checked={!!editing.ativo} onCheckedChange={v => setEditing({ ...editing, ativo: v })} />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={uploading} className="bg-primary text-primary-foreground">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 
 /* ---------- CRUD genérico para editais/eventos ---------- */
 const CrudPanel = ({ table, categoria, labelOverride }: { table: "editais" | "eventos"; categoria?: string; labelOverride?: string }) => {
