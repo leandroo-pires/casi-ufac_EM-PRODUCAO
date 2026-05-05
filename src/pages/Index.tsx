@@ -42,6 +42,8 @@ const Index = () => (
         <div className="reveal" style={{ animationDelay: "740ms" }}><SobreCASI /></div>
       </div>
     </section>
+
+    <HomeCardsGrid />
   </Layout>
 );
 
