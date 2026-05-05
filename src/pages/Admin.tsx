@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Layout } from "@/components/Layout";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { BackButton } from "@/components/BackButton";
 import { useIsAdmin } from "@/hooks/useAuth";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,16 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Pencil, Trash2, Plus, ShieldAlert, Loader2, Inbox } from "lucide-react";
+import {
+  Pencil, Trash2, Plus, ShieldAlert, Loader2, Inbox,
+  FileText, CalendarDays, Megaphone, Users, FileEdit, Image as ImageIcon,
+  CalendarRange, FolderOpen, GraduationCap, Camera, BookOpen, LayoutDashboard, ExternalLink,
+} from "lucide-react";
+import {
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
+  SidebarHeader as SbHeader,
+} from "@/components/ui/sidebar";
 
 type AnyRow = Record<string, any>;
 type TableName = "editais" | "eventos" | "ouvidorias";
