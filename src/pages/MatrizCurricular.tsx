@@ -1,7 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { BackButton } from "@/components/BackButton";
 import { MatrizCurricularFlow } from "@/components/MatrizCurricularFlow";
-import { FileDown } from "lucide-react";
 
 const MatrizCurricular = () => (
   <Layout>
