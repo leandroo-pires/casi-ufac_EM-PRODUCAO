@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -11,13 +11,17 @@ import {
   Position,
   BackgroundVariant,
   ReactFlowProvider,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { disciplinas, atividadesComplementares, type Disciplina } from "@/lib/matrizCurricular";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Search, X } from "lucide-react";
+import { Search, X, FileDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toPng } from "html-to-image";
+import jsPDF from "jspdf";
+import { toast } from "@/hooks/use-toast";
 
 // ============ Layout constants ============
 const COL_WIDTH = 260;
