@@ -89,6 +89,90 @@ const norm = (s: string) =>
 const MatrizFlowInner = () => {
   const [hovered, setHovered] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const flowWrapperRef = useRef<HTMLDivElement>(null);
+  const { fitView } = useReactFlow();
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!flowWrapperRef.current || downloading) return;
+    setDownloading(true);
+    // limpa hover/busca para captura limpa
+    setHovered(null);
+    const prevSearch = search;
+    setSearch("");
+    try {
+      // enquadra o grafo inteiro
+      fitView({ padding: 0.08, duration: 0 });
+      // aguarda render do fitView + remoção de hover
+      await new Promise((r) => setTimeout(r, 350));
+
+      const node = flowWrapperRef.current;
+      const bgColor = "hsl(205, 70%, 4%)";
+
+      const dataUrl = await toPng(node, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: bgColor,
+        filter: (el) => {
+          if (!(el instanceof HTMLElement)) return true;
+          // remove controles, minimap e qualquer elemento marcado
+          if (el.classList?.contains("react-flow__controls")) return false;
+          if (el.classList?.contains("react-flow__minimap")) return false;
+          if (el.dataset?.pdfHide === "true") return false;
+          return true;
+        },
+      });
+
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise<void>((res, rej) => {
+        img.onload = () => res();
+        img.onerror = () => rej(new Error("Falha ao carregar imagem"));
+      });
+
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 8;
+      const availW = pageW - margin * 2;
+      const availH = pageH - margin * 2 - 14; // espaço para título
+
+      const ratio = img.width / img.height;
+      let drawW = availW;
+      let drawH = drawW / ratio;
+      if (drawH > availH) {
+        drawH = availH;
+        drawW = drawH * ratio;
+      }
+      const offsetX = (pageW - drawW) / 2;
+      const offsetY = margin + 12 + (availH - drawH) / 2;
+
+      // fundo escuro
+      pdf.setFillColor(8, 18, 26);
+      pdf.rect(0, 0, pageW, pageH, "F");
+
+      // título
+      pdf.setTextColor(40, 230, 240);
+      pdf.setFontSize(14);
+      pdf.text("MATRIZ CURRICULAR — Sistemas de Informação · UFAC", pageW / 2, margin + 6, {
+        align: "center",
+      });
+
+      pdf.addImage(dataUrl, "PNG", offsetX, offsetY, drawW, drawH, undefined, "FAST");
+
+      pdf.save("matriz_curricular_casi.pdf");
+    } catch (err) {
+      console.error("[PDF] erro:", err);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setSearch(prevSearch);
+      setDownloading(false);
+    }
+  }, [downloading, fitView, search]);
 
   const { prereqMap, successorMap } = useMemo(() => {
     const all = [...disciplinas, ...atividadesComplementares];
