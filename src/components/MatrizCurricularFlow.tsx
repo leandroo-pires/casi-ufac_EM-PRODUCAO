@@ -349,9 +349,30 @@ const MatrizFlowInner = () => {
             {matchIds.size === 1 ? "" : "s"}
           </p>
         )}
+        <div className="sm:ml-auto" data-pdf-hide="true">
+          <Button
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+            className="font-display tracking-wider bg-card/60 border border-primary/70 text-primary hover:bg-primary/15 hover:border-primary hover:shadow-[0_0_18px_hsl(var(--primary)/0.45)] hover:-translate-y-0.5 transition-all"
+            variant="ghost"
+          >
+            {downloading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Gerando PDF...
+              </>
+            ) : (
+              <>
+                <FileDown className="h-4 w-4" />
+                Baixar Matriz em PDF
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div
+        ref={flowWrapperRef}
         className="w-full rounded-xl border border-primary/20 overflow-hidden"
         style={{
           height: "min(80vh, 820px)",
